@@ -9,6 +9,22 @@ function $(id) {
 	return !id ? null : document.getElementById(id);
 }
 
+var jq = null;
+function $jq() {
+    src = JSPATH + 'jquery.min.js?' + VERHASH;
+	if(!JSLOADED[src]) {
+        var checkrun = function () {
+            if(JSLOADED[src]) {
+                jq = jQuery.noConflict();
+            } else {
+                setTimeout(function () {checkrun();}, 50);
+            }
+        };
+		appendscript(src);
+        return checkrun();
+	}
+}
+
 function $C(classname, ele, tag) {
 	var returns = [];
 	ele = ele || document;

@@ -18,8 +18,8 @@ class membersearch {
 	function getfield($fieldid='') {
 		static $fields = array(
 			'uid'=>'member', 'username'=>'member', 'groupid'=>'member', 'medalid'=>'medal','tagid'=>'tag','idtype'=>'tag',
-			'email'=>'member', 'credits'=>'member', 'regdate'=>'member',
-			'status'=>'member', 'freeze'=>'member', 'emailstatus'=>'member', 'avatarstatus'=>'member','videophotostatus'=>'member',
+			'email'=>'member','sms'=>'member', 'credits'=>'member', 'regdate'=>'member',
+			'status'=>'member', 'freeze'=>'member', 'emailstatus'=>'member', 'smsstatus'=>'member', 'avatarstatus'=>'member','videophotostatus'=>'member',
 			'conisbind'=>'member','uin' => 'black','sid'=>'session',
 			'extcredits1'=>'count', 'extcredits2'=>'count', 'extcredits3'=>'count', 'extcredits4'=>'count',
 			'extcredits5'=>'count',	'extcredits6'=>'count', 'extcredits7'=>'count', 'extcredits8'=>'count',
@@ -46,7 +46,7 @@ class membersearch {
 	function gettype($fieldid) {
 		static $types = array(
 			'uid'=>'int', 'groupid'=>'int', 'medalid'=>'int', 'tagid'=>'int', 'credits'=>'int',
-			'status'=>'int', 'freeze'=>'int', 'emailstatus'=>'int', 'avatarstatus'=>'int','videophotostatus'=>'int',
+			'status'=>'int', 'freeze'=>'int', 'emailstatus'=>'int', 'smsstatus'=>'int', 'avatarstatus'=>'int','videophotostatus'=>'int',
 			'extcredits1'=>'int', 'extcredits2'=>'int', 'extcredits3'=>'int', 'extcredits4'=>'int',
 			'extcredits5'=>'int', 'extcredits6'=>'int', 'extcredits7'=>'int', 'extcredits8'=>'int',
 			'posts'=>'int', 'friends'=>'int', 'birthyear'=>'int', 'birthmonth'=>'int', 'birthday'=>'int', 'gender'=>'int',

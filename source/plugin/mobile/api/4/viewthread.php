@@ -6,6 +6,7 @@
  *
  *      $Id: viewthread.php 35159 2014-12-23 02:22:03Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }
@@ -127,7 +128,13 @@ class mobile_api {
 				}
 				$variable['postlist'][$k]['imagelist'] = $imagelist;
 			}
-			$variable['postlist'][$k]['message'] = preg_replace("/\[attach\]\d+\[\/attach\]/i", '', $variable['postlist'][$k]['message']);
+			foreach($variable['postlist'][$k]['attachlist'] as $aid) {
+				$variable['postlist'][$k]['attachments'][$aid]['aid'] = packaids($variable['postlist'][$k]['attachments'][$aid]);
+				$variable['postlist'][$k]['attachments'][$aid] = mobile_core::getvalues($variable['postlist'][$k]['attachments'][$aid], array('aid', 'dateline', 'filename', 'attachsize', 'payed', 'url'));
+			}
+			foreach($variable['postlist'][$k]['imagelist'] as $aid) {
+				$variable['postlist'][$k]['attachments'][$aid] = mobile_core::getvalues($variable['postlist'][$k]['attachments'][$aid], array('dateline', 'filename', 'attachment', 'payed', 'url', 'thumb'));
+			}
 			$variable['postlist'][$k]['message'] = preg_replace('/(&nbsp;){2,}/', '', $variable['postlist'][$k]['message']);
 			$variable['postlist'][$k]['dateline'] = strip_tags($post['dateline']);
 			$variable['postlist'][$k]['groupiconid'] = mobile_core::usergroupIconId($post['groupid']);
@@ -192,7 +199,11 @@ class mobile_api {
 	}
 
 	function _findimg($string) {
-		return preg_replace('/(<img src=\")(.+?)(\".*?\>)/ise', "mobile_api::_parseimg('\\1', '\\2', '\\3')", $string);
+		return preg_replace_callback('/(<img src=\")(.+?)(\".*?\>)/is', array(__CLASS__, 'findimg_callback_parseimg_123'), $string);
+	}
+
+	static function findimg_callback_parseimg_123($matches) {
+		return mobile_api::_parseimg($matches[1], $matches[2], $matches[3]);
 	}
 
 	function _parseimg($before, $img, $after) {

@@ -39,9 +39,6 @@ if(!$_G['uid'] && !((!$_G['forum']['postperm'] && $_G['group']['allowpost']) || 
 	showmessage('post_forum_newthread_nopermission', NULL);
 }
 
-if(!$_G['uid'] && ($_G['setting']['need_avatar'] || $_G['setting']['need_email'] || $_G['setting']['need_friendnum'])) {
-	showmessage('postperm_login_nopermission', NULL, array(), array('login' => 1));
-}
 
 checklowerlimit('post', 0, 1, $_G['forum']['fid']);
 

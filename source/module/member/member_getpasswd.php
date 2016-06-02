@@ -67,6 +67,7 @@ if($_GET['uid'] && $_GET['id'] && $_GET['sign'] === make_getpws_sign($_GET['uid'
 		}
 		C::t('common_member')->update($_GET['uid'], array('password' => $password));
 		C::t('common_member_field_forum')->update($_GET['uid'], array('authstr' => ''));
+		C::t('common_member_login')->delete($_GET['uid']);
 		showmessage('getpasswd_succeed', 'index.php', array(), array('login' => 1));
 	}
 

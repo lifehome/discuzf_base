@@ -514,6 +514,7 @@ if($operation == 'ad') {
 		showsetting('adv_setting_advexpiration_day', 'advexpirationnew[day]', $advexpiration['day'], 'text');
 		showsetting('adv_setting_advexpiration_method', array('advexpirationnew[method]', array(
 			array('email', cplang('adv_setting_advexpiration_method_email')),
+			array('sms', cplang('adv_setting_advexpiration_method_sms')),
 			array('notice', cplang('adv_setting_advexpiration_method_notice')),
 		)), $advexpiration['method'], 'mcheckbox');
 		showsetting('adv_setting_advexpiration_users', 'advexpirationnew[users]', $advexpiration['users'], 'textarea');

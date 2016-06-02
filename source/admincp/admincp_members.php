@@ -926,8 +926,10 @@ EOF;
 		showsetting('username', 'newusername', '', 'text');
 		showsetting('password', 'newpassword', '', 'text');
 		showsetting('email', 'newemail', '', 'text');
+		showsetting('sms', 'newsms', '', 'text');
 		showsetting('usergroup', '', '', '<select name="newgroupid">'.$groupselect.'</select>');
 		showsetting('members_add_email_notify', 'emailnotify', '', 'radio');
+		showsetting('members_add_sms_notify', 'mobilenotify', '', 'radio');
 		showsubmit('addsubmit');
 		showtablefooter();
 		showformfooter();
@@ -937,18 +939,19 @@ EOF;
 		$newusername = trim($_GET['newusername']);
 		$newpassword = trim($_GET['newpassword']);
 		$newemail = strtolower(trim($_GET['newemail']));
+		$newsms = strtolower(trim($_GET['newsms']));
 
-		if(!$newusername || !isset($_GET['confirmed']) && !$newpassword || !isset($_GET['confirmed']) && !$newemail) {
+		if(!$newusername || !isset($_GET['confirmed']) && !$newpassword || !isset($_GET['confirmed']) && !$newemail && !$newsms) {
 			cpmsg('members_add_invalid', '', 'error');
 		}
 
-		if(C::t('common_member')->fetch_uid_by_username($newusername) || C::t('common_member_archive')->fetch_uid_by_username($newusername)) {
+		if(C::t('common_member')->fetch_uid_by_username($newusername) || C::t('common_member_archive')->fetch_uid_by_username($newusername) || C::t('common_member_login')->getUid($newusername)) {
 			cpmsg('members_add_username_duplicate', '', 'error');
 		}
 
 		loaducenter();
 
-		$uid = uc_user_register(addslashes($newusername), $newpassword, $newemail);
+		$uid = uc_user_register(addslashes($newusername), $newpassword, $newemail, $newsms);
 		if($uid <= 0) {
 			if($uid == -1) {
 				cpmsg('members_add_illegal', '', 'error');
@@ -958,7 +961,7 @@ EOF;
 				if(empty($_GET['confirmed'])) {
 					cpmsg('members_add_username_activation', 'action=members&operation=add&addsubmit=yes&newgroupid='.$_GET['newgroupid'].'&newusername='.rawurlencode($newusername), 'form');
 				} else {
-					list($uid,, $newemail) = uc_get_user(addslashes($newusername));
+					list($uid,, $newemail, $newsms) = uc_get_user(addslashes($newusername));
 				}
 			} elseif($uid == -4) {
 				cpmsg('members_email_illegal', '', 'error');
@@ -966,6 +969,10 @@ EOF;
 				cpmsg('members_email_domain_illegal', '', 'error');
 			} elseif($uid == -6) {
 				cpmsg('members_email_duplicate', '', 'error');
+			} elseif($uid == -7) {
+				cpmsg('members_sms_illegal', '', 'error');
+			} elseif($uid == -8) {
+				cpmsg('members_sms_duplicate', '', 'error');
 			}
 		}
 
@@ -982,7 +989,7 @@ EOF;
 		loadcache('fields_register');
 		$init_arr = explode(',', $_G['setting']['initcredits']);
 		$password = md5(random(10));
-		C::t('common_member')->insert($uid, $newusername, $password, $newemail, 'Manual Acting', $_GET['newgroupid'], $init_arr, $newadminid);
+		C::t('common_member')->insert($uid, $newusername, $password, $newemail, $newsms, 'Manual Acting', $_GET['newgroupid'], $init_arr, $newadminid);
 		if($_GET['emailnotify']) {
 			if(!function_exists('sendmail')) {
 				include libfile('function/mail');
@@ -997,6 +1004,15 @@ EOF;
 			));
 			if(!sendmail("$newusername <$newemail>", $add_member_subject, $add_member_message)) {
 				runlog('sendmail', "$newemail sendmail failed.");
+			}
+		}
+		if($_GET['smsnotify']) {
+		if(!function_exists('sendsms')) {
+				include libfile('function/sms');
+			}
+			$add_member_message = lang('sms', 'add_member_message', array());
+			if(!sendsms($newsms, $add_member_message)) {
+				runlog('sendsms', "$newsms sendsms failed.");
 			}
 		}
 
@@ -1935,6 +1951,8 @@ EOF;
 		$member['bio'] = html2bbcode($member['bio']);
 		$member['signature'] = html2bbcode($member['sightml']);
 
+		$loginData = C::t('common_member_login')->fetch($uid);
+
 		shownav('user', 'members_edit');
 		showsubmenu("$lang[members_edit] - $member[username]", array(
 			array('connect_member_info', 'members&operation=edit&uid='.$uid,  1),
@@ -1952,6 +1970,7 @@ EOF;
 				"<a href=\"".ADMINSCRIPT."?action=album$hrefext\" class=\"act\">$lang[albums]($member[albums])</a>".
 				"<a href=\"".ADMINSCRIPT."?action=share$hrefext\" class=\"act\">$lang[shares]($member[sharings])</a> <br>&nbsp;$lang[setting_styles_viewthread_userinfo_oltime]: $member[oltime]$lang[hourtime]");
 		showsetting('members_edit_password', 'passwordnew', '', 'text');
+		showsetting('members_edit_loginname', 'loginnamenew', $loginData['loginname'], 'text');
 		if(!empty($_G['setting']['connect']['allow']) && (!empty($member['conopenid']) || !empty($member['uinblack']))) {
 			if($member['conisbind'] && !$member['conisregister']) {
 				showsetting('members_edit_unbind', 'connectunbind', 0, 'radio');
@@ -1962,6 +1981,8 @@ EOF;
 		showsetting('members_edit_status', 'statusnew', $member['status'], 'radio');
 		showsetting('members_edit_email', 'emailnew', $member['email'], 'text');
 		showsetting('members_edit_email_emailstatus', 'emailstatusnew', $member['emailstatus'], 'radio');
+		showsetting('members_edit_sms', 'smsnew', $member['sms'], 'text');
+		showsetting('members_edit_sms_smsstatus', 'smsstatusnew', $member['smsstatus'], 'radio');
 		showsetting('members_edit_posts', 'postsnew', $member['posts'], 'text');
 		showsetting('members_edit_digestposts', 'digestpostsnew', $member['digestposts'], 'text');
 		showsetting('members_edit_regip', 'regipnew', $member['regip'], 'text');
@@ -1999,7 +2020,7 @@ EOF;
 		require_once libfile('function/discuzcode');
 
 		$questionid = $_GET['clearquestion'] ? 0 : '';
-		$ucresult = uc_user_edit(addslashes($member['username']), $_GET['passwordnew'], $_GET['passwordnew'], addslashes(strtolower(trim($_GET['emailnew']))), 1, $questionid);
+		$ucresult = uc_user_edit(addslashes($member['username']), $_GET['passwordnew'], $_GET['passwordnew'], addslashes(strtolower(trim($_GET['emailnew']))), addslashes(strtolower(trim($_GET['smsnew']))), 1, $questionid);
 		if($ucresult < 0) {
 			if($ucresult == -4) {
 				cpmsg('members_email_illegal', '', 'error');
@@ -2007,6 +2028,22 @@ EOF;
 				cpmsg('members_email_domain_illegal', '', 'error');
 			} elseif($ucresult == -6) {
 				cpmsg('members_email_duplicate', '', 'error');
+			} elseif($ucresult == -7) {
+				cpmsg('members_sms_illegal', '', 'error');
+			}elseif($ucresult == -8) {
+				cpmsg('members_sms_duplicate', '', 'error');
+			}
+		}
+
+		if($_GET['loginnamenew']) {
+			if(strlen($_GET['loginnamenew']) < 3) {
+				cpmsg('members_loginname_tooshort', '', 'error');
+			}
+			if(is_numeric($_GET['loginnamenew'])) {
+				cpmsg('members_loginname_is_numeric', '', 'error');
+			}
+			if(C::t('common_member_login')->checkExists($_GET['loginnamenew'], $_GET['uid']) || C::t('common_member')->fetch_by_username($_GET['loginnamenew'], 1)) {
+				cpmsg('members_loginname_exists', '', 'error');
 			}
 		}
 
@@ -2071,6 +2108,7 @@ EOF;
 		$memberupdate = array();
 		if($ucresult >= 0) {
 			$memberupdate['email'] = strtolower(trim($_GET['emailnew']));
+			$memberupdate['sms'] = strtolower(trim($_GET['smsnew']));
 		}
 		if($ucresult >= 0 && !empty($_GET['passwordnew'])) {
 			$memberupdate['password'] = md5(random(10));
@@ -2079,6 +2117,7 @@ EOF;
 		$addfriend = intval($_GET['addfriendnew']);
 		$status = intval($_GET['statusnew']) ? -1 : 0;
 		$emailstatusnew = intval($_GET['emailstatusnew']);
+		$smsstatusnew = intval($_GET['smsstatusnew']);
 		if(!empty($_G['setting']['connect']['allow'])) {
 			if($member['uinblack'] && empty($_GET['uinblack'])) {
 				C::t('common_uin_black')->delete($member['uinblack']);
@@ -2092,7 +2131,7 @@ EOF;
 				connectunbind($member);
 			}
 		}
-		$memberupdate = array_merge($memberupdate, array('regdate'=>$regdatenew, 'emailstatus'=>$emailstatusnew, 'status'=>$status, 'timeoffset'=>$_GET['timeoffsetnew']));
+		$memberupdate = array_merge($memberupdate, array('regdate'=>$regdatenew, 'emailstatus'=>$emailstatusnew, 'smsstatus'=>$smsstatusnew, 'status'=>$status, 'timeoffset'=>$_GET['timeoffsetnew']));
 		C::t('common_member'.$tableext)->update($uid, $memberupdate);
 		C::t('common_member_field_home'.$tableext)->update($uid, array('addsize' => $addsize, 'addfriend' => $addfriend));
 		C::t('common_member_count'.$tableext)->update($uid, array('posts' => $_GET['postsnew'], 'digestposts' => $_GET['digestpostsnew']));
@@ -2100,6 +2139,12 @@ EOF;
 		C::t('common_member_field_forum'.$tableext)->update($uid, array('customstatus' => $_GET['cstatusnew'], 'sightml' => $sightmlnew));
 		if(!empty($fieldarr)) {
 			C::t('common_member_profile'.$tableext)->update($uid, $fieldarr);
+		}
+
+		if($_GET['loginnamenew']) {
+			C::t('common_member_login')->insert(array('uid' => $uid, 'loginname' => $_GET['loginnamenew']), false, true);
+		} else {
+			C::t('common_member_login')->delete($uid);
 		}
 
 
@@ -2118,7 +2163,12 @@ EOF;
 			$iptoban = explode('.', getgpc('ip'));
 
 			$ipbanned = '';
-			foreach(C::t('common_banned')->fetch_all_order_dateline() as $banned) {
+			$ipcount = C::t('common_banned')->count();
+			$page = empty($_GET['page']) ? 1 : dintval($_GET['page']);
+			$pagesize = 50;
+			$startlimit = ($page - 1) * $pagesize;
+			$multipage = multi($ipcount, $pagesize, $page, ADMINSCRIPT.'?action=members&operation=ipban', 0, 10);
+			foreach(C::t('common_banned')->fetch_all_limit($startlimit, $pagesize) as $banned) {
 				for($i = 1; $i <= 4; $i++) {
 					if($banned["ip$i"] == -1) {
 						$banned["ip$i"] = '*';
@@ -2817,11 +2867,16 @@ function showsearchform($operation = '') {
 		array(1, $lang['yes']),
 		array(0, $lang['no']),
 	), 1), $_GET['emailstatus'], 'mradio');
+	showsetting('members_search_smsstatus', array('smsstatus', array(
+		array(1, $lang['yes']),
+		array(0, $lang['no']),
+	), 1), $_GET['smsstatus'], 'mradio');
 	showsetting('members_search_avatarstatus', array('avatarstatus', array(
 		array(1, $lang['yes']),
 		array(0, $lang['no']),
 	), 1), $_GET['avatarstatus'], 'mradio');
 	showsetting('members_search_email', 'email', $_GET['email'], 'text');
+	showsetting('members_search_sms', 'sms', $_GET['sms'], 'text');
 	showsetting("$lang[credits] $lang[members_search_between]", array("credits_low", "credits_high"), array($_GET['credits_low'], $_GET['credtis_high']), 'range');
 
 	if(!empty($_G['setting']['extcredits'])) {
@@ -2969,6 +3024,7 @@ function shownewsletter() {
 	} else {
 		showsetting('members_newsletter_method', array('notifymembers', array(
 			    array('email', $lang['email'], array('pmextra' => 'none', 'posttype' => '')),
+			    array('sms', $lang['sms'], array('pmextra' => 'none', 'posttype' => '')),
 			    array('notice', $lang['notice'], array('pmextra' => 'none', 'posttype' => '')),
 			    array('pm', $lang['grouppm'], array('pmextra' => '', 'posttype' => 'none'))
 			)), 'pm', 'mradio');
@@ -3189,11 +3245,14 @@ function notifymembers($operation, $variable) {
 	if(!function_exists('sendmail')) {
 		include libfile('function/mail');
 	}
-	if($_GET['notifymember'] && in_array($_GET['notifymembers'], array('pm', 'notice', 'email', 'mobile'))) {
+	if(!function_exists('sendsms')) {
+		include libfile('function/sms');
+	}
+	if($_GET['notifymember'] && in_array($_GET['notifymembers'], array('pm', 'notice', 'email', 'sms'))) {
 		$uids = searchmembers($search_condition, $pertask, $current);
 
 		require_once libfile('function/discuzcode');
-		$message = in_array($_GET['notifymembers'], array('email','notice')) && $_GET['posttype'] ? discuzcode($message, 1, 0, 1, '', '' ,'' ,1) : discuzcode($message, 1, 0);
+		$message = in_array($_GET['notifymembers'], array('email', 'sms', 'notice')) && $_GET['posttype'] ? discuzcode($message, 1, 0, 1, '', '' ,'' ,1) : discuzcode($message, 1, 0);
 		$pmuids = array();
 		if($_GET['notifymembers'] == 'pm') {
 			$membernum = countmembers($search_condition, $urladd);
@@ -3238,6 +3297,10 @@ function notifymembers($operation, $variable) {
 				} elseif($_GET['notifymembers'] == 'email') {
 					if(!sendmail("$member[username] <$member[email]>", $subject, $message.$addmsg)) {
 						runlog('sendmail', "$member[email] sendmail failed.");
+					}
+				} elseif($_GET['notifymembers'] == 'sms') {
+					if(!sendsms($member['sms'], $message.$addmsg)) {
+						runlog('sendsms', "$member[sms] sendsms failed.");
 					}
 				}
 

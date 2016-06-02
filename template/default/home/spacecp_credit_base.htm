@@ -10,7 +10,7 @@
 				<!--{eval $creditid=$_G['setting']['creditstrans'];}-->
 				<!--{if $_G['setting']['extcredits'][$creditid]}-->
 				<!--{eval $credit=$_G['setting']['extcredits'][$creditid]; }-->
-				<li class="xi1 cl"><em><!--{if $credit[img]}--> {$credit[img]}<!--{/if}--> {$credit[title]}: </em><!--{echo getuserprofile('extcredits'.$creditid);}--> {$credit[unit]} &nbsp; <!--{if ($_G['setting']['ec_ratio'] && ($_G['setting']['ec_tenpay_opentrans_chnid'] || $_G['setting'][ec_tenpay_bargainor] || $_G['setting']['ec_account'])) || $_G['setting']['card']['open']}--><a href="home.php?mod=spacecp&ac=credit&op=buy" class="xi2">{lang card_use}&raquo;</a><!--{/if}--></li>
+				<li class="xi1 cl"><em><!--{if $credit[img]}--> {$credit[img]}<!--{/if}--> {$credit[title]}: </em><!--{echo getuserprofile('extcredits'.$creditid);}--> {$credit[unit]} &nbsp; <!--{if ($_G['setting']['ec_ratio'] && ($_G['setting']['ec_tenpay_opentrans_chnid'] || $_G[setting][ec_wxpay_appid] || $_G['setting'][ec_tenpay_bargainor] || $_G['setting']['ec_account'])) || $_G['setting']['card']['open']}--><a href="home.php?mod=spacecp&ac=credit&op=buy" class="xi2">{lang card_use}&raquo;</a><!--{/if}--></li>
 				<!--{/if}-->
 			<!--{/if}-->
 			<!--{loop $_G['setting']['extcredits'] $id $credit}-->
@@ -54,8 +54,8 @@
 
 		<!--{elseif $_GET['op'] == 'buy'}-->
 
-			<!--{if ($_G[setting][ec_ratio] && ($_G[setting][ec_account] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_tenpay_bargainor])) || $_G[setting][card][open]}-->
-			<form id="addfundsform" name="addfundsform" method="post" autocomplete="off" action="home.php?mod=spacecp&ac=credit&op=buy" onsubmit="ajaxpost(this.id, 'return_addfundsform');">
+			<!--{if ($_G[setting][ec_ratio] && ($_G[setting][ec_account] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_wxpay_appid] || $_G[setting][ec_tenpay_bargainor])) || $_G[setting][card][open]}-->
+			<form id="addfundsform" name="addfundsform" method="post" autocomplete="off" action="home.php?mod=spacecp&ac=credit&op=buy" onsubmit="credit_submit(this);return false;">
 				<input type="hidden" name="formhash" value="{FORMHASH}" />
 				<input type="hidden" name="addfundssubmit" value="true" />
 				<input type="hidden" name="handlekey" value="buycredit" />
@@ -78,19 +78,24 @@
 								<ul>
 								<!--{if $_G[setting][ec_ratio] && $_G[setting][ec_account]}-->
 									<li class="z">
-										<input name="bank_type" type="radio" value="alipay" class="vm" id="apitype_alipay" $ecchecked onclick="checkValue(this)" /><label class="vm" style="margin-right:18px;width:135px;height:32px;background:#FFF url({STATICURL}image/common/alipay_logo.gif) no-repeat;border:1px solid #DDD;display:inline-block;" onclick="{if $_G[setting][card][open]}$('cardbox').style.display='none';if($('card_box_sec')){$('card_box_sec').style.display='none';}$('paybox').style.display='';{/if}" for="apitype_alipay"></label>
+										<input name="bank_type" type="radio" value="alipay" class="vm" id="apitype_alipay" /><label class="vm" style="margin-right:18px;width:135px;height:32px;background:#FFF url({STATICURL}image/common/alipay_logo.gif) no-repeat;border:1px solid #DDD;display:inline-block;" onclick="{if $_G[setting][card][open]}$('cardbox').style.display='none';if($('card_box_sec')){$('card_box_sec').style.display='none';}$('paybox').style.display='';{/if}" for="apitype_alipay"></label>
+									</li>
+								<!--{/if}-->
+								<!--{if $_G[setting][ec_ratio] && $_G[setting][ec_wxpay_appid]}-->
+									<li class="z">
+										<input name="bank_type" type="radio" value="wxpay" class="vm" id="apitype_wxpay" /><label class="vm" style="margin-right:18px;width:135px;height:32px;background:#FFF url({STATICURL}image/common/wxpay_logo.gif) no-repeat;border:1px solid #DDD;display:inline-block;" onclick="{if $_G[setting][card][open]}$('cardbox').style.display='none';if($('card_box_sec')){$('card_box_sec').style.display='none';}$('paybox').style.display='';{/if}" for="apitype_wxpay"></label>
 									</li>
 								<!--{/if}-->
 								<!--{if $_G[setting][card][open]}-->
 									<li>
-										<input name="bank_type" type="radio" value="card" id="apitype_card" class="vm" $ecchecked  onclick="activatecardbox();" /><label class="vm" style="padding-left:10px;width:125px;height:32px;line-height:32px;background:#FFF;border:1px solid #DDD;display:inline-block;" onclick="activatecardbox();"><span class="xs2">{lang card_credit}</span></label>
+										<input name="bank_type" type="radio" value="card" id="apitype_card" class="vm"  onclick="activatecardbox();" /><label class="vm" style="padding-left:10px;width:125px;height:32px;line-height:32px;background:#FFF;border:1px solid #DDD;display:inline-block;" onclick="activatecardbox();"><span class="xs2">{lang card_credit}</span></label>
 									</li>
 								<!--{/if}-->
 								</ul>
 							</div>
 						</td>
 					</tr>
-					<tr id="paybox" style="{if ($_G[setting][ec_tenpay_bargainor] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_account]) && empty($ecchecked) }display:;{else}display:none;{/if}">
+					<tr id="paybox" style="{if ($_G[setting][ec_tenpay_bargainor] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_wxpay_appid] || $_G[setting][ec_account]) && empty($ecchecked) }display:;{else}display:none;{/if}">
 						<th>{lang memcp_credits_addfunds}</th>
 						<td class="pns">
 							<input type="text" size="5" class="px" style="width: auto;" id="addfundamount" name="addfundamount" value="0" onkeyup="addcalcredit()" />
@@ -124,11 +129,18 @@
 							<button type="submit" name="addfundssubmit_btn" class="pn" id="addfundssubmit_btn" value="true"><em>{lang memcp_credits_addfunds}</em></button>
 						</td>
 					</tr>
-
 				</table>
 			</form>
 			<span style="display: none" id="return_addfundsform"></span>
 			<script type="text/javascript">
+				var bank_type_radio_first = document.getElementsByName('bank_type')[0];
+				if(!isUndefined(bank_type_radio_first)){
+					bank_type_radio_first.setAttribute("checked","true");
+				}
+				function credit_submit(obj){
+					ajaxpost(obj.id, 'return_addfundsform');
+					return false;
+				}
 				function addcalcredit() {
 					var addfundamount = $('addfundamount').value.replace(/^0/, '');
 					var addfundamount = parseInt(addfundamount);

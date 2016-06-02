@@ -75,7 +75,7 @@ if($_GET['op'] == 'base') {
 
 } elseif ($_GET['op'] == 'buy') {
 
-	if((!$_G['setting']['ec_ratio'] || (!$_G['setting']['ec_tenpay_opentrans_chnid'] && !$_G['setting']['ec_tenpay_bargainor']  && !$_G['setting']['ec_account'])) && !$_G['setting']['card']['open'] ) {
+	if((!$_G['setting']['ec_ratio'] || (!$_G['setting']['ec_wxpay_appid'] && !$_G['setting']['ec_tenpay_opentrans_chnid'] && !$_G['setting']['ec_tenpay_bargainor']  && !$_G['setting']['ec_account'])) && !$_G['setting']['card']['open'] ) {
 		showmessage('action_closed', NULL);
 	}
 
@@ -118,7 +118,7 @@ if($_GET['op'] == 'base') {
 				showmessage('credits_addfunds_amount_invalid', '', array('ec_maxcredits' => $_G['setting']['ec_maxcredits'], 'ec_mincredits' => $_G['setting']['ec_mincredits']), array('showdialog' => 1, 'showmsg' => true, 'closetime' => true));
 			}
 
-			if($apitype == 'card' && C::t('forum_order')->count_by_search($_G['uid'], null, null, null, null, null, null, $_G['timestamp'] - 180)) {
+			if($apitype == 'card' && C::t('forum_order')->count_by_search($_G['uid'], null, null, null, null, null, null, null, $_G['timestamp'] - 180)) {
 				showmessage('credits_addfunds_ctrl', '', array(), array('showdialog' => 1, 'showmsg' => true, 'closetime' => true));
 			}
 
@@ -146,10 +146,15 @@ if($_GET['op'] == 'base') {
 				'price' => $price,
 				'submitdate' => $_G['timestamp'],
 			));
-
-			include template('common/header_ajax');
-			echo '<form id="payform" action="'.$requesturl.'" method="post"></form><script type="text/javascript" reload="1">$(\'payform\').submit();</script>';
-			include template('common/footer_ajax');
+			if($_GET['bank_type'] == 'wxpay'){
+				include template('common/header_ajax');
+				echo '<script type="text/javascript">showWindow(\'wxpay_qrcode_box\',\'home.php?mod=spacecp&ac=credit&op=wxqrcode&url='.urlencode(authcode($requesturl."\t".$orderid, 'ENCODE')).'\',\'get\',0);</script>';
+				include template('common/footer_ajax');
+			}else{
+				include template('common/header_ajax');
+				echo '<form id="payform" action="'.$requesturl.'" method="post"></form><script type="text/javascript" reload="1">$(\'payform\').submit();</script>';
+				include template('common/footer_ajax');
+			}
 			dexit();
 		}
 	} else {
@@ -158,9 +163,37 @@ if($_GET['op'] == 'base') {
 			$secqaacheck = 0;
 		}
 	}
-
+} elseif ($_GET['op'] == 'wxqrcode') {
+	$success_url = "home.php?mod=spacecp&ac=credit&op=log";
+	$request = authcode($_GET['url'], 'DECODE');
+	$res = explode("\t", $request);
+	if(empty($res) || count($res) != 2){
+	    showmessage('submitcheck_error', '', array(), array('showdialog' => 1, 'showmsg' => true, 'closetime' => true));
+	}
+	$requesturl = $res[0];
+	$orderid = $res[1];
+    $check_url = 'home.php?mod=spacecp&ac=credit&op=wxcheck&orderid='.urlencode(authcode($orderid, 'ENCODE'));
+	include template('common/header_ajax');
+	include template('common/wxpaycode');
+    include template('common/footer_ajax');
+} elseif ($_GET['op'] == 'wxcheck') {
+    if($_G['setting']['ec_wxpay_appid']){
+        $orderid = authcode($_GET['orderid'], 'DECODE');
+        $order = C::t('forum_order')->fetch($orderid);
+        if(empty($order)){
+            showmessage('credits_addfunds_order_invalid', '', array(), array('showdialog' => 1, 'showmsg' => true, 'closetime' => true));
+        }
+        if($order['status']==2){
+            $requesturl = 'home.php?mod=spacecp&ac=credit';
+            include template('common/header_ajax');
+            echo '<form id="payform" action="'.$requesturl.'" method="post"></form><script type="text/javascript" reload="1">$(\'payform\').submit();</script>';
+            include template('common/footer_ajax');
+        }
+        dexit();
+    }else{
+        showmessage('action_closed', '', array(), array('showdialog' => 1, 'showmsg' => true, 'closetime' => true));
+    }
 } elseif ($_GET['op'] == 'transfer') {
-
 	if(!($_G['setting']['transferstatus'] && $_G['group']['allowtransfer'])) {
 		showmessage('action_closed', NULL);
 	}

@@ -60,7 +60,7 @@ if(!defined('IN_UC')) {
 
 	if(in_array($get['action'], array('test', 'deleteuser', 'renameuser', 'gettag', 'synlogin', 'synlogout', 'updatepw', 'updatebadwords', 'updatehosts', 'updateapps', 'updateclient', 'updatecredit', 'getcredit', 'getcreditsettings', 'updatecreditsettings', 'addfeed'))) {
 		$uc_note = new uc_note();
-		echo $uc_note->$get['action']($get, $post);
+		echo call_user_func(array($uc_note, $get['action']), $get, $post);
 		exit();
 	} else {
 		exit(API_RETURN_FAILED);
@@ -83,7 +83,7 @@ class uc_note {
 		return xml_serialize($arr, $htmlon);
 	}
 
-	function uc_note() {
+	function __construct() {
 
 	}
 
@@ -190,6 +190,18 @@ class uc_note {
 		$uid = intval($get['uid']);
 		if(($member = getuserbyuid($uid, 1))) {
 			dsetcookie('auth', authcode("$member[password]\t$member[uid]", 'ENCODE'), $cookietime);
+		} else if($_G['setting']['fastactivation']) {
+			if(!function_exists('uc_user_login')) {
+				loaducenter();
+			}
+			$user = uc_get_user($uid, 1);
+			if($user) {
+				$init_arr = explode(',', $_G['setting']['initcredits']);
+				$groupid = $_G['setting']['regverify'] ? 8 : $_G['setting']['newusergroupid'];
+				$passwd = md5(random(10));
+				C::t('common_member')->insert($uid, $get[username], $passwd, $user[2], $_G['clientip'], $groupid, $init_arr);
+				dsetcookie('auth', authcode("$passwd\t$uid", 'ENCODE'), $cookietime);
+			}
 		}
 	}
 

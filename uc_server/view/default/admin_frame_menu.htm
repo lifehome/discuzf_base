@@ -27,6 +27,7 @@ a{ color:#2366A8; text-decoration:none; }
 		<!--{if $user['allowadminsetting'] || $user['isfounder']}--><li><a href="admin.php?m=setting&a=ls" target="main">{lang menu_basic_setting}</a></li><!--{/if}-->
 		<!--{if $user['allowadminsetting'] || $user['isfounder']}--><li><a href="admin.php?m=setting&a=register" target="main">{lang menu_register_setting}</a></li><!--{/if}-->
 		<!--{if $user['allowadminsetting'] || $user['isfounder']}--><li><a href="admin.php?m=setting&a=mail" target="main">{lang menu_mail_setting}</a></li><!--{/if}-->
+		<!--{if $user['allowadminsetting'] || $user['isfounder']}--><li><a href="admin.php?m=setting&a=sms" target="main">{lang menu_sms_setting}</a></li><!--{/if}-->
 		<!--{if $user['allowadminapp'] || $user['isfounder']}--><li><a href="admin.php?m=app&a=ls" target="main">{lang menu_application}</a></li><!--{/if}-->
 		<!--{if $user['allowadminuser'] || $user['isfounder']}--><li><a href="admin.php?m=user&a=ls" target="main">{lang menu_manager_user}</a></li><!--{/if}-->
 		<!--{if $user['isfounder']}--><li><a href="admin.php?m=admin&a=ls" target="main">{lang menu_admin_user}</a></li><!--{/if}-->
@@ -40,7 +41,7 @@ a{ color:#2366A8; text-decoration:none; }
 		<!--{if $user['isfounder']}--><li><a href="admin.php?m=plugin&a=filecheck" target="main">{lang plugin}</a></li><!--{/if}-->
 	</ul>
 </div>
-<div class="footer">Powered by UCenter {UC_SERVER_VERSION}<br />&copy; 2001 - 2011 <a href="http://www.comsenz.com/" target="_blank">Comsenz</a> Inc.</div>
+<div class="footer">Powered by UCenter {UC_SERVER_VERSION}<br />&copy; 2001-{lang menu_year} <a href="http://www.comsenz.com/" target="_blank">Comsenz Inc.</a></div>
 <script type="text/javascript">
 	function cleartabon() {
 		if(lastmenu) {

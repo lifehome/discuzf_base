@@ -53,7 +53,7 @@ if($op == "finish") {
 } elseif($op == 'config') {
 
 	$hash = md5($_G['uid'].UC_KEY);
-	$uploadurl = urlencode(getsiteurl().'home.php?mod=misc&ac=swfupload'.($iscamera ? '&op=screen' : ($isdoodle ? '&op=doodle&from=':'')));
+	$uploadurl = urlencode(getsiteurl().'home.php?mod=misc&ac=swfupload'.($iscamera ? '&op=screen' : ($isdoodle ? '&op=doodle&formhash='.FORMHASH.'&from=':'')));
 	if($isupload) {
 		if(!checkperm('allowupload')) {
 			$hash = '';

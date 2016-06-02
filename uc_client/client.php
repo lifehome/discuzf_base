@@ -4,7 +4,7 @@
 	[UCenter] (C)2001-2099 Comsenz Inc.
 	This is NOT a freeware, use is subject to license terms
 
-	$Id: client.php 1179 2014-11-03 07:11:25Z hypowang $
+	$Id: client.php 1178 2014-11-03 07:05:21Z hypowang $
 */
 
 if(!defined('UC_API')) {
@@ -14,8 +14,8 @@ if(!defined('UC_API')) {
 error_reporting(0);
 
 define('IN_UC', TRUE);
-define('UC_CLIENT_VERSION', '1.6.0');
-define('UC_CLIENT_RELEASE', '20141101');
+define('UC_CLIENT_VERSION', '1.7.0');
+define('UC_CLIENT_RELEASE', '20160601');
 define('UC_ROOT', substr(__FILE__, 0, -10));
 define('UC_DATADIR', UC_ROOT.'./data/');
 define('UC_DATAURL', UC_API.'/data');
@@ -352,8 +352,8 @@ function uc_friend_ls($uid, $page = 1, $pagesize = 10, $totalnum = 10, $directio
 	return UC_CONNECT == 'mysql' ? $return : uc_unserialize($return);
 }
 
-function uc_user_register($username, $password, $email, $questionid = '', $answer = '', $regip = '') {
-	return call_user_func(UC_API_FUNC, 'user', 'register', array('username'=>$username, 'password'=>$password, 'email'=>$email, 'questionid'=>$questionid, 'answer'=>$answer, 'regip' => $regip));
+function uc_user_register($username, $password, $email, $sms, $questionid = '', $answer = '', $regip = '') {
+	return call_user_func(UC_API_FUNC, 'user', 'register', array('username'=>$username, 'password'=>$password, 'email'=>$email, 'sms'=>$sms, 'questionid'=>$questionid, 'answer'=>$answer, 'regip' => $regip));
 }
 
 function uc_user_login($username, $password, $isuid = 0, $checkques = 0, $questionid = '', $answer = '', $ip = '') {
@@ -385,8 +385,8 @@ function uc_user_synlogout() {
 	return $return;
 }
 
-function uc_user_edit($username, $oldpw, $newpw, $email, $ignoreoldpw = 0, $questionid = '', $answer = '') {
-	return call_user_func(UC_API_FUNC, 'user', 'edit', array('username'=>$username, 'oldpw'=>$oldpw, 'newpw'=>$newpw, 'email'=>$email, 'ignoreoldpw'=>$ignoreoldpw, 'questionid'=>$questionid, 'answer'=>$answer));
+function uc_user_edit($username, $oldpw, $newpw, $email, $sms, $ignoreoldpw = 0, $questionid = '', $answer = '') {
+	return call_user_func(UC_API_FUNC, 'user', 'edit', array('username'=>$username, 'oldpw'=>$oldpw, 'newpw'=>$newpw, 'email'=>$email, 'sms'=>$sms, 'ignoreoldpw'=>$ignoreoldpw, 'questionid'=>$questionid, 'answer'=>$answer));
 }
 
 function uc_user_delete($uid) {
@@ -403,6 +403,10 @@ function uc_user_checkname($username) {
 
 function uc_user_checkemail($email) {
 	return call_user_func(UC_API_FUNC, 'user', 'check_email', array('email'=>$email));
+}
+
+function uc_user_checksms($sms) {
+	return call_user_func(UC_API_FUNC, 'user', 'check_sms', array('sms'=>$sms));
 }
 
 function uc_user_addprotected($username, $admin='') {
@@ -423,8 +427,8 @@ function uc_get_user($username, $isuid=0) {
 	return UC_CONNECT == 'mysql' ? $return : uc_unserialize($return);
 }
 
-function uc_user_merge($oldusername, $newusername, $uid, $password, $email) {
-	return call_user_func(UC_API_FUNC, 'user', 'merge', array('oldusername'=>$oldusername, 'newusername'=>$newusername, 'uid'=>$uid, 'password'=>$password, 'email'=>$email));
+function uc_user_merge($oldusername, $newusername, $uid, $password, $email, $sms) {
+	return call_user_func(UC_API_FUNC, 'user', 'merge', array('oldusername'=>$oldusername, 'newusername'=>$newusername, 'uid'=>$uid, 'password'=>$password, 'email'=>$email, 'sms'=>$sms));
 }
 
 function uc_user_merge_remove($username) {
@@ -620,6 +624,11 @@ function uc_avatar($uid, $type = 'virtual', $returnhtml = 1) {
 
 function uc_mail_queue($uids, $emails, $subject, $message, $frommail = '', $charset = 'gbk', $htmlon = FALSE, $level = 1) {
 	return call_user_func(UC_API_FUNC, 'mail', 'add', array('uids' => $uids, 'emails' => $emails, 'subject' => $subject, 'message' => $message, 'frommail' => $frommail, 'charset' => $charset, 'htmlon' => $htmlon, 'level' => $level));
+}
+
+
+function uc_sms_queue($uids, $smses, $message, $charset = 'gbk', $level = 1) {
+    return call_user_func(UC_API_FUNC, 'sms', 'add', array('uids' => $uids, 'smses' => $smses, 'message' => $message, 'charset' => $charset, 'level' => $level));
 }
 
 function uc_check_avatar($uid, $size = 'middle', $type = 'virtual') {

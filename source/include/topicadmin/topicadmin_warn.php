@@ -18,7 +18,7 @@ if(!$_G['group']['allowwarnpost']) {
 $topiclist = $_GET['topiclist'];
 if(!($warnpids = dimplode($topiclist))) {
 	showmessage('admin_warn_invalid');
-} elseif(!$_G['group']['allowbanpost'] || !$_G['tid']) {
+} elseif(!$_G['group']['allowwarnpost'] || !$_G['tid']) {
 	showmessage('admin_nopermission', NULL);
 }
 

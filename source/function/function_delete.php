@@ -88,6 +88,7 @@ function deletemember($uids, $delpost = true) {
 	}
 
 	C::t('common_mailcron')->delete_by_touid($arruids);
+	C::t('common_smscron')->delete_by_touid($arruids);
 
 	foreach(array('home_doing', 'home_share', 'home_album', 'common_credit_rule_log', 'common_credit_rule_log_field',
 		'home_pic', 'home_blog', 'home_blogfield', 'home_class', 'home_clickuser',

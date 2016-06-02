@@ -108,6 +108,7 @@ $list = array();
 if($groupids) {
 	$orderby = in_array(getgpc('orderby'), array('membernum', 'dateline', 'thread', 'activity')) ? getgpc('orderby') : 'displayorder';
 	$page = intval(getgpc('page')) ? intval($_GET['page']) : 1;
+	$page = $page > 65535 ? 1 : $page;
 	$start = ($page - 1) * $perpage;
 	$getcount = grouplist('', '', '', $groupids, 1, 1);
 	if($getcount) {

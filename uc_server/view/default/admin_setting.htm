@@ -147,12 +147,21 @@
 				<input type="hidden" name="formhash" value="{FORMHASH}">
 				<table class="opt">
 					<tr>
+						<th colspan="2">{lang setting_register_mdoublee}:</th>
+					</tr>
+					<tr>
+						<td>
+							<input type="radio" class="radio" name="mdoublee" value="1" $doublee[1] /><label for="yes">{lang yes}</label>
+							<input type="radio" class="radio" name="mdoublee" value="0" $doublee[0] /><label for="no">{lang no}</label>
+						</td>
+					</tr>
+					<tr>
 						<th colspan="2">{lang setting_register_doublee}:</th>
 					</tr>
 					<tr>
 						<td>
-							<input type="radio" id="yes" class="radio" name="doublee" value="1" $doublee[1] /><label for="yes">{lang yes}</label>
-							<input type="radio" id="no" class="radio" name="doublee" value="0" $doublee[0] /><label for="no">{lang no}</label>
+							<input type="radio" class="radio" name="doublee" value="1" $doublee[1] /><label for="yes">{lang yes}</label>
+							<input type="radio" class="radio" name="doublee" value="0" $doublee[0] /><label for="no">{lang no}</label>
 						</td>
 					</tr>
 					<tr>
@@ -180,7 +189,7 @@
 				<div class="opt"><input type="submit" name="submit" value=" {lang submit} " class="btn" tabindex="3" /></div>
 			</form>
 		</div>
-	<!--{else}-->
+	<!--{elseif $a == 'mail'}-->
 		<div class="mainbox nomargin">
 			<form action="admin.php?m=setting&a=mail" method="post">
 				<input type="hidden" name="formhash" value="{FORMHASH}">
@@ -292,6 +301,110 @@
 							<label><input type="radio" class="radio" name="mailsilent"{if $mailsilent == 0} checked="checked"{/if} value="0" />{lang no}</label>
 						</td>
 						<td valign="top">&nbsp;</td>
+					</tr>
+				</table>
+				<div class="opt"><input type="submit" name="submit" value=" {lang submit} " class="btn" tabindex="3" /></div>
+			</form>
+		</div>
+	<!--{elseif $a == 'sms'}-->
+		<div class="mainbox nomargin">
+			<form action="admin.php?m=setting&a=sms" method="post">
+				<input type="hidden" name="formhash" value="{FORMHASH}">
+				<table class="opt">
+					<tr>
+						<th colspan="2">{lang settings_sms_settings_smstype}:</th>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<label><input class="radio" name="smstype" value="1"{if $smstype == 1} checked="checked"{/if}  type="radio"> {lang settings_sms_settings_smstype_1}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{lang settings_sms_settings_smstype_1_comment}</label><br />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2">{lang settings_sms_settings_smsauth_username}:</td>
+					</tr>
+					<tr>
+						<td>
+							<input name="smsauth_username" value="{$smsauth_username}" type="text">
+						</td>
+						<td>{lang settings_sms_settings_smsauth_username_comment}</td>
+					</tr>
+					<tr>
+						<th colspan="2">{lang settings_sms_settings_smsauth_passwd}:</td>
+					</tr>
+					<tr>
+						<td>
+							<input name="smsauth_passwd" value="{$smsauth_passwd}" type="password">
+						</td>
+						<td>{lang settings_sms_settings_smsauth_passwd_comment}</td>
+					</tr>
+					<tr>
+						<th colspan="2">{lang settings_sms_settings_silent}:</th>
+					</tr>
+					<tr>
+						<td>
+							<label><input type="radio" class="radio" name="smssilent"{if $smssilent == 1} checked="checked"{/if} value="1" />{lang yes}</label>
+							<label><input type="radio" class="radio" name="smssilent"{if $smssilent == 0} checked="checked"{/if} value="0" />{lang no}</label>
+						</td>
+						<td valign="top">&nbsp;</td>
+					</tr>
+					<tr>
+						<th colspan="2">{lang settings_sms_settings_template}:</th>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_get_passwd}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[get_passwd]">$smstemplate[get_passwd]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_get_passwd_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_sms_verify}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[sms_verify]">$smstemplate[sms_verify]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_sms_verify_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_add_member}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[add_member]">$smstemplate[add_member]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_add_member_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_notice}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[notice]">$smstemplate[notice]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_notice_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_moderate_member}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[moderate_member]">$smstemplate[moderate_member]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_moderate_member_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_adv_expiration}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[adv_expiration]">$smstemplate[adv_expiration]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_adv_expiration_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_send_invite}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[send_invite]">$smstemplate[send_invite]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_send_invite_comment}<br />{lang settings_sms_settings_template_comment}</td>
+					</tr>
+					<tr>
+						<td colspan="2">{lang settings_sms_settings_template_invite_payment}:</td>
+					</tr>
+					<tr>
+						<td><textarea class="area" name="smstemplate[invite_payment]">$smstemplate[invite_payment]</textarea></td>
+						<td valign="top">{lang settings_sms_settings_template_invite_payment_comment}<br />{lang settings_sms_settings_template_comment}</td>
 					</tr>
 				</table>
 				<div class="opt"><input type="submit" name="submit" value=" {lang submit} " class="btn" tabindex="3" /></div>

@@ -23,7 +23,7 @@ if($_GET['key'] !== md5($_G['setting']['authkey'].$_SERVER['REMOTE_ADDR'])) {
 	exit;
 }
 
-$plugins = array('qqconnect', 'cloudstat', 'soso_smilies', 'cloudsearch', 'qqgroup', 'security', 'xf_storage', 'pcmgr_url_safeguard');
+$plugins = array('qqconnect', 'cloudstat', 'soso_smilies', 'security', 'pcmgr_url_safeguard');
 
 require_once libfile('function/plugin');
 require_once libfile('function/admincp');

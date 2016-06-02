@@ -7,6 +7,7 @@
  *      $Id: favthread.php 34314 2014-02-20 01:04:24Z nemohou $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

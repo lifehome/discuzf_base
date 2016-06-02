@@ -158,7 +158,6 @@ class Cloud_Service_Server_Security extends Cloud_Service_Server_Restful {
 		if (count($evilUser)) {
 			return true;
 		} else {
-			$data = array('uid' => $uid, 'evilcount' => 1, 'eviltype' => $evilType, 'createtime' => TIMESTAMP);
 
 			C::t('#security#security_eviluser')->insert($data, false, true);
 			$this->_updateEvilCount('member');

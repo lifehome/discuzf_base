@@ -25,11 +25,11 @@ if($_G['config']['output']['tplrefresh']) {
 	cleartemplatecache();
 }
 
-$plugins = array('qqconnect', 'cloudstat', 'soso_smilies', 'cloudsearch', 'security', 'xf_storage', 'mobile', 'pcmgr_url_safeguard', 'manyou', 'cloudunion', 'cloudcaptcha', 'wechat');
+$plugins = array('qqconnect', 'cloudstat', 'soso_smilies', 'security', 'mobile', 'pcmgr_url_safeguard', 'manyou', 'cloudcaptcha', 'wechat');
 $opens = array('mobile', 'pcmgr_url_safeguard', 'security', 'cloudcaptcha');
 $checkcloses = array('cloudcaptcha');
 
-$cloudapps = array('qqconnect' => 'connect', 'cloudstat' => 'stats', 'soso_smilies' => 'smilies', 'cloudsearch' => 'search', 'security' => 'security', 'manyou' => 'manyou', 'cloudunion' => 'union', 'cloudcaptcha' => 'captcha');
+$cloudapps = array('qqconnect' => 'connect', 'cloudstat' => 'stats', 'soso_smilies' => 'smilies', 'cloudsearch' => 'search', 'security' => 'security', 'manyou' => 'manyou', 'cloudcaptcha' => 'captcha');
 
 $apps = C::t('common_setting')->fetch('cloud_apps', true);
 if (!$apps) {

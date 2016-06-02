@@ -6,6 +6,7 @@
  *
  *      $Id: showactivity.php 35127 2014-12-02 08:17:18Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

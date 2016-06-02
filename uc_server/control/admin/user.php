@@ -15,6 +15,8 @@ define('UC_USER_USERNAME_EXISTS', -3);
 define('UC_USER_EMAIL_FORMAT_ILLEGAL', -4);
 define('UC_USER_EMAIL_ACCESS_ILLEGAL', -5);
 define('UC_USER_EMAIL_EXISTS', -6);
+define('UC_USER_sms_FORMAT_ILLEGAL', -7);
+define('UC_USER_sms_EXISTS', -8);
 
 define('UC_LOGIN_SUCCEED', 0);
 define('UC_LOGIN_ERROR_FOUNDER_PW', -1);
@@ -137,6 +139,7 @@ class control extends adminbase {
 		$username = getgpc('addname', 'P');
 		$password =  getgpc('addpassword', 'P');
 		$email = getgpc('addemail', 'P');
+		$sms = getgpc('addsms', 'P');
 
 		if(($status = $this->_check_username($username)) < 0) {
 			if($status == UC_USER_CHECK_USERNAME_FAILED) {
@@ -156,7 +159,14 @@ class control extends adminbase {
 				$this->message('user_add_email_exists', 'BACK');
 			}
 		}
-		$uid = $_ENV['user']->add_user($username, $password, $email);
+		if(($status = $this->_check_sms($sms)) < 0) {
+			if($status == UC_USER_sms_FORMAT_ILLEGAL) {
+				$this->message('user_add_sms_formatinvalid', 'BACK');
+			} elseif($status == UC_USER_sms_EXISTS) {
+				$this->message('user_add_sms_exists', 'BACK');
+			}
+		}
+		$uid = $_ENV['user']->add_user($username, $password, $email, $sms);
 		$this->message('user_add_succeed', 'admin.php?m=user&a=ls');
 	}
 
@@ -170,12 +180,15 @@ class control extends adminbase {
 			$username = getgpc('addname', 'P');
 			$password =  getgpc('addpassword', 'P');
 			$email = getgpc('addemail', 'P');
+			$sms = getgpc('addsms', 'P');
 
 			if(($status = $this->_check_username($username)) >= 0) {
 				if(($status = $this->_check_email($email)) >= 0) {
-					$_ENV['user']->add_user($username, $password, $email);
-					$status = 1;
-					$this->writelog('user_add', "username=$username");
+				    if(($status = $this->_check_sms($sms)) >= 0){
+    					$_ENV['user']->add_user($username, $password, $email, $sms);
+    					$status = 1;
+    					$this->writelog('user_add', "username=$username");
+				    }
 				}
 			}
 		}
@@ -191,6 +204,7 @@ class control extends adminbase {
 		$srchuid = intval(getgpc('srchuid', 'R'));
 		$srchregip = trim(getgpc('srchregip', 'R'));
 		$srchemail = trim(getgpc('srchemail', 'R'));
+		$srchsms = trim(getgpc('srchsms', 'R'));
 
 		$sqladd = $urladd = '';
 		if($srchname) {
@@ -204,6 +218,10 @@ class control extends adminbase {
 		if($srchemail) {
 			$sqladd .= " AND email='$srchemail'";
 			$this->view->assign('srchemail', $srchemail);
+		}
+		if($srchsms) {
+			$sqladd .= " AND sms='$srchsms'";
+			$this->view->assign('srchsms', $srchsms);
 		}
 		if($srchregdatestart) {
 			$urladd .= '&srchregdatestart='.$srchregdatestart;
@@ -257,6 +275,7 @@ class control extends adminbase {
 			$newusername = getgpc('newusername', 'P');
 			$password = getgpc('password', 'P');
 			$email = getgpc('email', 'P');
+			$sms = getgpc('sms', 'P');
 			$delavatar = getgpc('delavatar', 'P');
 			$rmrecques = getgpc('rmrecques', 'P');
 			$sqladd = '';
@@ -283,7 +302,7 @@ class control extends adminbase {
 				$_ENV['user']->delete_useravatar($uid);
 			}
 
-			$this->db->query("UPDATE ".UC_DBTABLEPRE."members SET $sqladd email='$email' WHERE uid='$uid'");
+			$this->db->query("UPDATE ".UC_DBTABLEPRE."members SET $sqladd email='$email',sms='$sms' WHERE uid='$uid'");
 			$status = $this->db->errno() ? -1 : 1;
 		}
 		$user = $this->db->fetch_first("SELECT * FROM ".UC_DBTABLEPRE."members WHERE uid='$uid'");
@@ -316,6 +335,16 @@ class control extends adminbase {
 		} else {
 			return 1;
 		}
+	}
+
+	function _check_sms($sms) {
+	    if(!$_ENV['user']->check_smsformat($sms)) {
+	        return UC_USER_sms_FORMAT_ILLEGAL;
+	    } elseif(!$this->settings['mdoublee'] && $_ENV['user']->check_smsexists($sms)) {
+	        return UC_USER_sms_EXISTS;
+	    } else {
+	        return 1;
+	    }
 	}
 
 	function _format_userlist(&$userlist) {

@@ -7,6 +7,7 @@
  *      $Id: sendpm.php 35186 2015-01-19 01:52:52Z nemohou $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

@@ -20,13 +20,15 @@ if($do == 'mod') {
 
 		$sendemail = isset($_GET['sendemail']) ? $_GET['sendemail'] : 0;
 		$checksendemail = $sendemail ? 'checked' : '';
+		$sendsms = isset($_GET['sendsms']) ? $_GET['sendsms'] : 0;
+		$checksendsms = $sendsms ? 'checked' : '';
 
 		$start_limit = ($page - 1) * $_G['setting']['memberperpage'];
 
 		$validatenum = C::t('common_member_validate')->count_by_status(0);
 		$members = '';
 		if($validatenum) {
-			$multipage = multi($validatenum, $_G['setting']['memberperpage'], $page, ADMINSCRIPT.'?action=moderate&operation=members&sendemail='.$sendemail);
+			$multipage = multi($validatenum, $_G['setting']['memberperpage'], $page, ADMINSCRIPT.'?action=moderate&operation=members&sendemail='.$sendemail.'&sendsms='.$sendsms);
 			$vuids = array();
 			loadcache('fields_register');
 			require_once libfile('function/profile');
@@ -62,7 +64,7 @@ if($do == 'mod') {
 				$member['admin'] = $member['admin'] ? "<a href=\"home.php?mod=space&username=".rawurlencode($member['admin'])."\" target=\"_blank\">$member[admin]</a>" : $lang['none'];
 				$members .= "<tr class=\"hover\" id=\"mod_uid_{$member[uid]}\"><td class=\"rowform\" style=\"width:80px;\"><ul class=\"nofloat\"><li><input id=\"mod_uid_{$member[uid]}_1\" class=\"radio\" type=\"radio\" name=\"modtype[$member[uid]]\" value=\"invalidate\" onclick=\"set_bg('invalidate', $member[uid]);\"><label for=\"mod_uid_{$member[uid]}_1\">$lang[invalidate]</label></li><li><input id=\"mod_uid_{$member[uid]}_2\" class=\"radio\" type=\"radio\" name=\"modtype[$member[uid]]\" value=\"validate\" onclick=\"set_bg('validate', $member[uid]);\"><label for=\"mod_uid_{$member[uid]}_2\">$lang[validate]</label></li>\n".
 					"<li>".($member['groupid'] == 8 ? "<input id=\"mod_uid_{$member[uid]}_3\" class=\"radio\" type=\"radio\" name=\"modtype[$member[uid]]\" value=\"delete\" onclick=\"set_bg('delete', $member[uid]);\"><label for=\"mod_uid_{$member[uid]}_3\">$lang[delete]</label>" : "<input disabled class=\"radio\" type=\"radio\" />$lang[delete]")."</li><li><input id=\"mod_uid_{$member[uid]}_4\" class=\"radio\" type=\"radio\" name=\"modtype[$member[uid]]\" value=\"ignore\" onclick=\"set_bg('ignore', $member[uid]);\"><label for=\"mod_uid_{$member[uid]}_4\">$lang[ignore]</label></li></ul></td><td><b><a href=\"home.php?mod=space&uid=$member[uid]\" target=\"_blank\">$member[username]</a></b>\n".$_G['cache']['usergroups'][$member['groupid']]['grouptitle'].
-					"<br />$lang[members_edit_regdate]: $member[regdate]<br />$lang[members_edit_regip]: $member[regip] ".convertip($member['regip'])."<br />$lang[members_edit_lastip]: $member[lastip] ".convertip($member['lastip'])."<br />Email: $member[email]$str</td>\n".
+					"<br />$lang[members_edit_regdate]: $member[regdate]<br />$lang[members_edit_regip]: $member[regip] ".convertip($member['regip'])."<br />$lang[members_edit_lastip]: $member[lastip] ".convertip($member['lastip'])."<br />Email: $member[email]<br />$lang[members_edit_sms]: $member[sms]$str</td>\n".
 					"<td align=\"center\"><textarea rows=\"4\" name=\"userremark[$member[uid]]\" style=\"width: 95%; word-break: break-all\">$member[message]</textarea></td>\n".
 					"<td>$lang[moderate_members_submit_times]: $member[submittimes]<br />$lang[moderate_members_submit_time]: $member[submitdate]<br />$lang[moderate_members_admin]: $member[admin]<br />\n".
 					"$lang[moderate_members_mod_time]: $member[moddate]</td><td><textarea rows=\"4\" id=\"remark[$member[uid]]\" name=\"remark[$member[uid]]\" style=\"width: 95%; word-break: break-all\">$member[remark]</textarea></td></tr>\n";
@@ -144,7 +146,7 @@ EOT;
 		showtableheader('moderate_members', 'fixpadding');
 		showsubtitle(array('operation', 'members_edit_info', 'moderate_members_message', 'moderate_members_info', 'moderate_members_remark'));
 		echo $members;
-		showsubmit('modsubmit', 'submit', '', '<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'invalidate\');set_bg_all(\'invalidate\');">'.cplang('moderate_all_invalidate').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'validate\');set_bg_all(\'validate\');">'.cplang('moderate_all_validate').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'delete\');set_bg_all(\'delete\');">'.cplang('moderate_all_delete').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'ignore\');set_bg_all(\'ignore\');">'.cplang('moderate_all_ignore').'</a> &nbsp;<a href="#all" onclick="cancelallcheck();set_bg_all(\'cancel\');">'.cplang('moderate_all_cancel').'</a><input class="checkbox" type="checkbox" name="apply_all" id="chk_apply_all"  value="1" disabled="disabled" />'.cplang('moderate_apply_all').' &nbsp;<input class="checkbox" type="checkbox" name="sendemail" id="sendemail" value="1" '.$checksendemail.' /><label for="sendemail"> '.cplang('moderate_members_email').'</label>', $multipage);
+		showsubmit('modsubmit', 'submit', '', '<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'invalidate\');set_bg_all(\'invalidate\');">'.cplang('moderate_all_invalidate').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'validate\');set_bg_all(\'validate\');">'.cplang('moderate_all_validate').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'delete\');set_bg_all(\'delete\');">'.cplang('moderate_all_delete').'</a> &nbsp;<a href="#all" onclick="checkAll(\'option\', $(\'cpform\'), \'ignore\');set_bg_all(\'ignore\');">'.cplang('moderate_all_ignore').'</a> &nbsp;<a href="#all" onclick="cancelallcheck();set_bg_all(\'cancel\');">'.cplang('moderate_all_cancel').'</a><input class="checkbox" type="checkbox" name="apply_all" id="chk_apply_all"  value="1" disabled="disabled" />'.cplang('moderate_apply_all').' &nbsp;<input class="checkbox" type="checkbox" name="sendemail" id="sendemail" value="1" '.$checksendemail.' /><label for="sendemail"> '.cplang('moderate_members_email').'</label> &nbsp;<input class="checkbox" type="checkbox" name="sendsms" id="sendsms" value="1" '.$checksendsms.' /><label for="sendsms"> '.cplang('moderate_members_sms').'</label>', $multipage);
 		showtablefooter();
 		showformfooter();
 
@@ -238,7 +240,7 @@ EOT;
 
 			if($_GET['sendemail']) {
 				if(!function_exists('sendmail')) {
-					include libfile('function/mail');
+					include_once libfile('function/mail');
 				}
 				foreach(array('delete', 'validate', 'invalidate') as $o) {
 					foreach($moderation[$o] as $uid) {
@@ -271,6 +273,32 @@ EOT;
 				}
 			}
 		}
+		if($_GET['sendsms']) {
+		    include_once libfile('function/sms');
+		    foreach(array('delete', 'validate', 'invalidate') as $o) {
+		        foreach($moderation[$o] as $uid) {
+		            if(isset($members[$uid])) {
+
+		                $smsvar = array(
+		                    'username' => $members[$uid]['username'],
+		                    'regdate' => dgmdate($members[$uid]['regdate']),
+		                    'modresult' => lang('sms', 'moderate_member_'.$o),
+		                    'bbname' => $_G['setting']['bbname'],
+		                    'sitename' => $_G['setting']['sitename'],
+		                    'siteurl' => $_G['setting']['siteurl'],
+		                );
+
+		                $smsconfig = dunserialize($_G['setting']['sms']);
+		                $smstemp = $smsconfig['template']['moderate_member'];
+
+		                if(!sendsms($member['sms'], $smsvar, $smstemp)) {
+		                    runlog('sendsms', "$member[sms] sendsms failed.");
+		                }
+		            }
+		        }
+		    }
+		}
+
 		cpmsg('moderate_members_op_succeed', "action=moderate&operation=members&page=$page", 'succeed', array('numvalidated' => $numvalidated, 'numinvalidated' => $numinvalidated, 'numdeleted' => $numdeleted));
 
 	}

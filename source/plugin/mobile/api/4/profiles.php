@@ -6,6 +6,7 @@
  *
  *      $Id: profiles.php 35024 2014-10-14 07:43:43Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

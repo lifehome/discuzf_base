@@ -1,6 +1,11 @@
-
 <?php
 
+/**
+ *      [Discuz!] (C)2001-2099 Comsenz Inc.
+ *      This is NOT a freeware, use is subject to license terms
+ *
+ *      $Id: table_forum_hotreply_member.php 30947 2012-07-03 03:05:21Z chenmengshu $
+ */
 
 if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');

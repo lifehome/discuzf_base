@@ -24,7 +24,7 @@
 <script type="text/javascript">
 	(function() {
 		var form = $('#fastpostform');
-		<!--{if !$_G[uid] || $_G[uid] && !$allowpostreply}-->
+		<!--{if !$allowpostreply}-->
 		$('#fastpostmessage').on('focus', function() {
 			<!--{if !$_G[uid]}-->
 				popup.open('{lang nologin_tip}', 'confirm', 'member.php?mod=logging&action=login');

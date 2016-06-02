@@ -5,7 +5,7 @@
 	$Id: register.js 33433 2013-06-13 07:36:25Z nemohou $
 */
 
-var lastusername = '', lastpassword = '', lastemail = '', lastinvitecode = '', stmp = new Array(), modifypwd = false, profileTips = '如不需要更改密碼，此處請留空';
+var lastusername = '', lastpassword = '', lastemail = '', lastinvitecode = '', stmp = new Array(), modifypwd = false, profileTips = '如不需要更改密碼，此處請留空',smscodesendtime = 60,smscodesendtimefuc;
 
 function errormessage(id, msg) {
 	if($(id)) {
@@ -59,12 +59,26 @@ function addFormEvent(formid, focus){
 	} catch(e) {}
 
 	try {
+		formNode[stmp[4]].onblur = function () {
+			checksms(formNode[stmp[4]].id);
+		};
+	} catch(e) {}
+	try {
+		$('smscodesend').onclick = function () {
+			sendsms(formNode[stmp[4]].id,formNode[stmp[5]].id);
+		};
+	} catch(e) {}
+
+	try {
 		if(focus) {
 			$('invitecode').focus();
 		} else {
 			formNode[stmp[0]].focus();
 		}
 	} catch(e) {}
+
+	smscodesendtime = getcookie('smscodesendtime');
+	if(smscodesendtime) disabledsendsms(smscodesendtime, true);
 }
 
 function checkPwdComplexity(firstObj, secondObj, modify) {
@@ -354,6 +368,82 @@ function checkemail(id) {
 	x.get('forum.php?mod=ajax&inajax=yes&infloat=register&handlekey=register&ajaxmenu=1&action=checkemail&email=' + email, function(s) {
 		errormessage(id, s);
 	});
+}
+
+function checksms(id) {
+	errormessage(id);
+	var sms = trim($(id).value);
+	if($(id).parentNode.className.match(/ p_right/) && (sms == '' || sms == lastsms)) {
+		return;
+	} else {
+		lastsms = sms;
+	}
+	if(!sms.match(/1\d{10}/ig)) {
+		errormessage(id, '手機號不正確');
+		return;
+	}
+	var x = new Ajax();
+	$('tip_' + id).parentNode.className = $('tip_' + id).parentNode.className.replace(/ p_right/, '');
+	x.get('forum.php?mod=ajax&inajax=yes&infloat=register&handlekey=register&ajaxmenu=1&action=checksms&sms=' + sms, function(s) {
+		errormessage(id, s);
+	});
+}
+
+function sendsms(smsid,smscodeid){
+	disabledsendsms(5);
+	checksms(smsid);
+	errormessage(smscodeid);
+	var sms = trim($(smsid).value);
+	var smscode = trim($(smscodeid).value);
+	if($(smscodeid).parentNode.className.match(/ p_right/) && (smscode == '' || smscode == lastsmscode)) {
+		return;
+	} else {
+		lastsmscode = smscode;
+	}
+	if(smscode.match(/<|"/ig)) {
+		errormessage(smscodeid, '驗證碼包含敏感字符');
+		return;
+	}
+	var x = new Ajax();
+	$('tip_' + smscodeid).parentNode.className = $('tip_' + smscodeid).parentNode.className.replace(/ p_right/, '');
+	x.get('forum.php?mod=ajax&inajax=yes&infloat=register&handlekey=register&ajaxmenu=1&action=sendsmscode&sms=' + sms, function(s) {
+		var success = s == '短信驗證碼發送成功' ? true : false;
+		if(success){
+			disabledsendsms(60,true);
+			$('tip_' + smscodeid).parentNode.className = $('tip_' + smscodeid).parentNode.className.replace(/ p_right/, '');
+			$('tip_' + smscodeid).parentNode.className += ' p_right';
+			$(smscodeid).className = $(smscodeid).className.replace(/ er/, '');
+		}else{
+			errormessage(smscodeid, s);
+		}
+	});
+}
+
+function disabledsendsms(time, changestr){
+	clearTimeout(smscodesendtimefuc);
+	smscodesendtime = time;
+	if(changestr){
+		$('smscodesend').value = smscodesendtime + '秒後重新發送';
+		setcookie('smscodesendtime',smscodesendtime,smscodesendtime);
+	}
+	$('smscodesend').setAttribute('disabled','disabled');
+	smscodesendtimefuc = setInterval(function(){
+		if(smscodesendtime == 1){
+			undisabledsendsms();
+		}else{
+			--smscodesendtime;
+			if(changestr){
+				$('smscodesend').value = smscodesendtime + '秒後重新發送';
+				setcookie('smscodesendtime',smscodesendtime,smscodesendtime);
+			}
+		}
+	},1000);
+}
+
+function undisabledsendsms(){
+	clearTimeout(smscodesendtimefuc);
+	$('smscodesend').value = '發送驗證碼';
+	$('smscodesend').attributes.removeNamedItem("disabled");
 }
 
 function checkinvite() {

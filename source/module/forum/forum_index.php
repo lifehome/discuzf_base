@@ -11,6 +11,10 @@ if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
+if($_G['setting']['mobile']['allowmnew'] && defined('IN_MOBILE') && !defined('IN_MOBILE_API')) {
+	dheader('location: m/');
+}
+
 require_once libfile('function/forumlist');
 
 $gid = intval(getgpc('gid'));

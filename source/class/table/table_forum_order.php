@@ -21,14 +21,22 @@ class table_forum_order extends discuz_table
 		parent::__construct();
 	}
 
-	public function count_by_search($uid = null, $status = null, $orderid = null, $email = null, $username = null, $buyer = null, $admin = null, $submit_starttime = null, $submit_endtime = null, $confirm_starttime = null, $confirm_endtime = null) {
+	public function count_by_search($uid = null, $status = null, $orderid = null, $email = null, $sms = null, $username = null, $buyer = null, $admin = null, $submit_starttime = null, $submit_endtime = null, $confirm_starttime = null, $confirm_endtime = null) {
 		$sql = '';
 		$sql .= $uid !== null ? ' AND o.'.DB::field('uid', dintval($uid)) : '';
 		$sql .= $status ? ' AND o.'.DB::field('status', $status) : '';
 		$sql .= $orderid ? ' AND o.'.DB::field('orderid', $orderid) : '';
 		$sql .= $email ? ' AND o.'.DB::field('email', $email) : '';
+		$sql .= $sms ? ' AND o.'.DB::field('sms', $sms) : '';
 		$sql .= $username ? ' AND m.'.DB::field('username', $username) : '';
-		$sql .= $buyer ? ' AND o.'.DB::field('buyer', $buyer) : '';
+		if($buyer){
+		    $buyerInfo = explode("\t", $buyer);
+		    if(count($buyerInfo)==2){
+		        $sql .= ' AND o.'.DB::field('buyer', $buyer);
+		    }else{
+		        $sql .= ' AND o.'.DB::field('buyer', '%'.$buyer.'%', 'like');
+		    }
+		}
 		$sql .= $admin ? ' AND o.'.DB::field('admin', $admin) : '';
 		$sql .= $submit_starttime ? ' AND o.'.DB::field('submitdate', $submit_starttime, '>=') : '';
 		$sql .= $submit_endtime ? ' AND o.'.DB::field('submitdate', $submit_endtime, '<') : '';
@@ -44,7 +52,14 @@ class table_forum_order extends discuz_table
 		$sql .= $orderid ? ' AND o.'.DB::field('orderid', $orderid) : '';
 		$sql .= $email ? ' AND o.'.DB::field('email', $email) : '';
 		$sql .= $username ? ' AND m.'.DB::field('username', $username) : '';
-		$sql .= $buyer ? ' AND o.'.DB::field('buyer', $buyer) : '';
+		if($buyer){
+		    $buyerInfo = explode("\t", $buyer);
+		    if(count($buyerInfo)==2){
+		        $sql .= ' AND o.'.DB::field('buyer', $buyer);
+		    }else{
+		        $sql .= ' AND o.'.DB::field('buyer', '%'.$buyer.'%', 'like');
+		    }
+		}
 		$sql .= $admin ? ' AND o.'.DB::field('admin', $admin) : '';
 		$sql .= $submit_starttime ? ' AND o.'.DB::field('submitdate', $submit_starttime, '>=') : '';
 		$sql .= $submit_endtime ? ' AND o.'.DB::field('submitdate', $submit_endtime, '<') : '';

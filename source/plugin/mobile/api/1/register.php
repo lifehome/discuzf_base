@@ -7,6 +7,7 @@
  *      $Id: register.php 32489 2013-01-29 03:57:16Z monkey $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

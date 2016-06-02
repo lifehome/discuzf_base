@@ -34,30 +34,7 @@ require './source/admincp/admincp_menu.php';
 $basescript = ADMINSCRIPT;
 
 $shownotice = '';
-if($_G['uid'] && $_G['member']['allowadmincp'] == 1 && ($_G['setting']['showpatchnotice'] == 1 || !isset($_G['cookie']['checkpatch']))) {
-	$discuz_patch = new discuz_patch();
-	if($_G['setting']['showpatchnotice'] == 1) {
-		$notice = $discuz_patch->fetch_patch_notice();
-		if($notice['data']) {
-			$shownotice = '<div class="notice"><a href="'.$basescript.'?action=patch" id="notice">'.($notice['fixed'] ? $lang['patch_fix_complete'] : $lang['patch_fix_rigth_now']).'</a></div>';
-		}
-	}
-	if(!isset($_G['cookie']['checkpatch'])) {
-		$discuz_patch->check_patch();
-	}
-}
-if($_G['uid'] && $_G['member']['allowadmincp'] == 1 && !$shownotice && $_G['setting']['upgrade']) {
-	$shownotice = '<div class="notice"><a href="'.$basescript.'?action=upgrade" id="notice">'.$lang['upgrade_right_now'].'</a></div>';
-}
-if($_G['uid'] && $_G['member']['allowadmincp'] == 1 && !isset($_G['cookie']['checkupgrade'])) {
-	$discuz_upgrade = new discuz_upgrade();
-	if($discuz_upgrade->check_upgrade()) {
-		if(empty($shownotice)) {
-			$shownotice = '<div class="notice"><a href="'.$basescript.'?action=upgrade" id="notice">'.$lang['upgrade_right_now'].'</a></div>';
-		}
-	}
-	dsetcookie('checkupgrade', 1, 7200);
-}
+
 
 echo <<<EOT
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
@@ -149,8 +126,8 @@ echo <<<EOT
 	<span onclick="menuScroll(1)"><img src="static/image/admincp/scrollu.gif" /></span><span onclick="menuScroll(2)"><img src="static/image/admincp/scrolld.gif" /></span>
 </div>
 <div class="copyright">
-	<p>Powered by <a href="http://www.discuz.net/" target="_blank">Discuz!</a> {$_G['setting']['version']}</p>
-	<p>&copy; 2001-2013, <a href="http://www.comsenz.com/" target="_blank">Comsenz Inc.</a></p>
+	<p>Powered by <a href="http://www.discuz.net/" target="_blank">Discuz!</a> <a href="http://www.discuzf.com/" target="_blank">{$_G['setting']['version']}</a></p>
+	<p>&copy; 2001-2016, <a href="http://www.comsenz.com/" target="_blank">Comsenz Inc.</a></p>
 </div>
 
 <div id="cpmap_menu" class="custom" style="display: none">

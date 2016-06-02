@@ -7,6 +7,7 @@
  *      $Id: newthread.php 35252 2015-04-09 06:07:41Z nemohou $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

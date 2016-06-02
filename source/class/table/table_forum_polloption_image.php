@@ -21,6 +21,9 @@ class table_forum_polloption_image extends discuz_table
 	public function fetch_all_by_tid($tids) {
 		return DB::fetch_all('SELECT * FROM %t WHERE tid'.(is_array($tids) ? ' IN(%n)' : '=%d'), array($this->_table, $tids), 'poid');
 	}
+	public function fetch_by_poid_tid_pid($poid, $tid, $pid) {
+		return DB::fetch_first('SELECT * FROM %t WHERE poid=%d AND tid=%d AND pid=%d LIMIT 1', array($this->_table, $poid, $tid, $pid));
+	}
 	public function count_by_aid_uid($aid, $uid) {
 		return DB::result_first('SELECT COUNT(*) FROM %t WHERE aid=%d AND uid=%d', array($this->_table, $aid, $uid));
 	}

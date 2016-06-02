@@ -24,6 +24,7 @@ CREATE TABLE uc_members (
   username char(15) NOT NULL DEFAULT '',
   `password` char(32) NOT NULL DEFAULT '',
   email char(32) NOT NULL DEFAULT '',
+  sms char(15) NOT NULL DEFAULT '',
   myid char(30)  NOT NULL DEFAULT '',
   myidkey char(16) NOT NULL DEFAULT '',
   regip char(15) NOT NULL DEFAULT '',
@@ -34,7 +35,8 @@ CREATE TABLE uc_members (
   secques char(8) NOT NULL default '',
   PRIMARY KEY(uid),
   UNIQUE KEY username(username),
-  KEY email(email)
+  KEY email(email),
+  KEY sms(sms)
 ) TYPE=MyISAM;
 
 DROP TABLE IF EXISTS uc_memberfields;
@@ -89,10 +91,13 @@ CREATE TABLE uc_settings (
 ) Type=MyISAM;
 
 REPLACE INTO uc_settings(k, v) VALUES ('accessemail','');
+REPLACE INTO uc_settings(k, v) VALUES ('accesssms','');
 REPLACE INTO uc_settings(k, v) VALUES ('censoremail','');
+REPLACE INTO uc_settings(k, v) VALUES ('censorsms','');
 REPLACE INTO uc_settings(k, v) VALUES ('censorusername','');
 REPLACE INTO uc_settings(k, v) VALUES ('dateformat','y-n-j');
 REPLACE INTO uc_settings(k, v) VALUES ('doublee','0');
+REPLACE INTO uc_settings(k, v) VALUES ('mdoublee','0');
 REPLACE INTO uc_settings(k, v) VALUES ('nextnotetime','0');
 REPLACE INTO uc_settings(k, v) VALUES ('timeoffset','28800');
 REPLACE INTO uc_settings(k, v) VALUES ('privatepmthreadlimit','25');
@@ -113,8 +118,13 @@ REPLACE INTO uc_settings(k, v) VALUES ('mailauth_password', 'password');
 REPLACE INTO uc_settings(k, v) VALUES ('maildelimiter', '0');
 REPLACE INTO uc_settings(k, v) VALUES ('mailusername', '1');
 REPLACE INTO uc_settings(k, v) VALUES ('mailsilent', '1');
+REPLACE INTO uc_settings(k, v) VALUES ('smstype', '1');
+REPLACE INTO uc_settings(k, v) VALUES ('smsauth_username', '');
+REPLACE INTO uc_settings(k, v) VALUES ('smsauth_passwd', '');
+REPLACE INTO uc_settings(k, v) VALUES ('smssilent', '1');
+REPLACE INTO uc_settings(k, v) VALUES ('smstemplate', '');
 REPLACE INTO uc_settings(k, v) VALUES ('login_failedtime', '5');
-REPLACE INTO uc_settings(k, v) VALUES ('version', '1.6.0');
+REPLACE INTO uc_settings(k, v) VALUES ('version', '1.7.0');
 
 DROP TABLE IF EXISTS uc_badwords;
 CREATE TABLE uc_badwords (
@@ -246,6 +256,25 @@ CREATE TABLE uc_mailqueue (
   failures tinyint(3) unsigned NOT NULL default '0',
   appid smallint(6) unsigned NOT NULL default '0',
   PRIMARY KEY  (mailid),
+  KEY appid (appid),
+  KEY level (level,failures)
+) TYPE=MyISAM;
+
+DROP TABLE IF EXISTS uc_smsqueue;
+CREATE TABLE uc_smsqueue (
+  smsid int(10) unsigned NOT NULL auto_increment,
+  touid mediumint(8) unsigned NOT NULL default '0',
+  tosms varchar(32) NOT NULL default '',
+  message text NOT NULL,
+  charset varchar(15) NOT NULL default '',
+  level tinyint(1) NOT NULL default '1',
+  dateline int(10) unsigned NOT NULL default '0',
+  failures tinyint(3) unsigned NOT NULL default '0',
+  appid smallint(6) unsigned NOT NULL default '0',
+  temptype varchar(30) NOT NULL default '',
+  tempsign varchar(50) NOT NULL default '',
+  template varchar(500) NOT NULL default '',
+  PRIMARY KEY  (smsid),
   KEY appid (appid),
   KEY level (level,failures)
 ) TYPE=MyISAM;

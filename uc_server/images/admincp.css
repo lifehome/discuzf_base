@@ -123,7 +123,7 @@ input.txt:hover, input.txt:focus, textarea:hover, textarea:focus{ border-color:#
 		*+html .tabmenu li a { height: 20px; line-height: 20px; }
 		.tabmenu li a:hover{ text-decoration:none; }
 		.tabmenu .tabcurrent a{ border:1px solid #B5CFD9; border-bottom:1px solid #F2F9FD; background:#F2F9FD; }
-	.tabcontent, .tabcontentcur{ position:absolute; top:22px; *top:21px; z-index:70; padding:10px; width:580px; border:1px solid #CCC; }
+	.tabcontent, .tabcontentcur{ position:absolute; top:22px; *top:21px; z-index:70; padding:10px; width:720px; border:1px solid #CCC; }
 	.tabcontentcur{ border:1px solid #B5CFD9; background:#F2F9FD; }
 	.tabcontent .txt, .tabcontentcur .txt{ margin-right:10px; width:110px; }
 	.tabcontent .btn, .tabcontentcur .btn{ margin-left:5px; }

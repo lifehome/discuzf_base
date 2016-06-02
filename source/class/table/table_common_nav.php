@@ -36,7 +36,7 @@ class table_common_nav extends discuz_table
 			$parameter[] = $navtype;
 			$wheresql = ' WHERE navtype=%d';
 		}
-		return DB::fetch_all('SELECT * FROM %t '.$wheresql.' ORDER BY displayorder', $parameter, $this->_pk);
+		return DB::fetch_all('SELECT * FROM %t '.$wheresql.' ORDER BY available DESC, displayorder', $parameter, $this->_pk);
 	}
 
 	public function fetch_all_by_navtype_parentid($navtype, $parentid) {

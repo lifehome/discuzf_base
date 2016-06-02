@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: mobile.class.php 35933 2016-05-13 05:56:41Z nemohou $
+ *      $Id: mobile.class.php 35168 2014-12-25 02:29:36Z nemohou $
  */
 
 define("MOBILE_PLUGIN_VERSION", "4");
@@ -275,9 +275,9 @@ class mobile_core {
 					continue;
 				}
 				if(!$isavariables) {
-					$value[$module.'_'.$hookname][$plugin] = $pluginclasses[$hook['class']]->$hook['method']($param);
+					$value[$module.'_'.$hookname][$plugin] = call_user_func(array($pluginclasses[$hook['class']], $hook['method']), $param);
 				} else {
-					$pluginclasses[$hook['class']]->$hook['method']($param);
+					call_user_func(array($pluginclasses[$hook['class']], $hook['method']), $param);
 				}
 			}
 		}
@@ -426,25 +426,6 @@ class base_plugin_mobile_forum extends base_plugin_mobile {
 
 class base_plugin_mobile_misc extends base_plugin_mobile {
 
-	function mobile() {
-		global $_G;
-		if(empty($_GET['view']) && !defined('MOBILE_API_OUTPUT')) {
-			if(in_array('mobileoem', $_G['setting']['plugins']['available'])) {
-				loadcache('mobileoem_data');
-			}
-			$_G['setting']['pluginhooks'] = array();
-			$qrfile = DISCUZ_ROOT.'./data/cache/mobile_siteqrcode.png';
-			if(!file_exists($qrfile) || $_G['adminid'] == 1) {
-				require_once DISCUZ_ROOT.'source/plugin/mobile/qrcode.class.php';
-				QRcode::png($_G['siteurl'], $qrfile);
-			}
-			define('MOBILE_API_OUTPUT', 1);
-			$_G['disabledwidthauto'] = 1;
-			define('TPL_DEFAULT', true);
-			include template('mobile:mobile');
-			exit;
-		}
-	}
 
 }
 

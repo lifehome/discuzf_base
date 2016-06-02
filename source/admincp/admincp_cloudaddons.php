@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: admincp_cloudaddons.php 35705 2015-12-01 06:14:33Z nemohou $
+ *      $Id: admincp_cloudaddons.php 33369 2013-06-03 05:00:29Z andyzheng $
  */
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 	exit('Access Denied');
@@ -25,6 +25,17 @@ if(!$operation) {
 	$extra = '';
 	if(!empty($_GET['id'])) {
 		$extra .= '&mod=app&ac=item&id='.rawurlencode($_GET['id']);
+	}elseif($_GET['copyright']){
+	    switch ($_GET['copyright']){
+	        case 'Tencent':
+	        case 'Comsenz Inc.':
+	            $f_k = '%BF%B5%CA%A2%D0%C2%B4%B4';
+	            break;
+	        default:
+	            $f_k = rawurlencode(diconv($_GET['copyright'], CHARSET, 'GBK'));
+	            break;
+	    }
+	    $extra .= '&type=d&f_k='.$f_k;
 	}
 	if(!empty($_GET['extra'])) {
 		$extra .= '&'.addslashes($_GET['extra']);
@@ -182,7 +193,7 @@ if(!$operation) {
 			if(file_exists(DISCUZ_ROOT.'./data/addonpack/'.$_GET['key'].'.php')) {
 				dheader('location: '.$_G['siteurl'].'data/addonpack/'.$_GET['key'].'.php');
 			}
-			cpmsg('cloudaddons_pack_installed', '', 'succeed');
+			cpmsg('cloudaddons_pack_installed', 'action=packs', 'succeed');
 		}
 	}
 }

@@ -6,6 +6,7 @@
  *
  *      $Id: forummisc.php 35103 2014-11-18 10:10:29Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

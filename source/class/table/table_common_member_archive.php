@@ -56,11 +56,26 @@ class table_common_member_archive extends table_common_member
 		return $user;
 	}
 
+	public function fetch_by_sms($sms) {
+		$user = array();
+		if(isset($this->membersplit) && $sms && ($user = DB::fetch_first('SELECT * FROM %t WHERE sms=%s', array($this->_table, $sms)))) {
+			$user['_inarchive'] = true;
+		}
+		return $user;
+	}
+
 
 	public function count_by_email($email) {
 		$count = 0;
 		if(isset($this->membersplit) && $email) {
 			$count = DB::result_first('SELECT COUNT(*) FROM %t WHERE email=%s', array($this->_table, $email));
+		}
+		return $count;
+	}
+	public function count_by_sms($sms) {
+		$count = 0;
+		if(isset($this->membersplit) && $mobile) {
+			$count = DB::result_first('SELECT COUNT(*) FROM %t WHERE sms=%s', array($this->_table, $sms));
 		}
 		return $count;
 	}

@@ -14,7 +14,9 @@ if(!defined('IN_DISCUZ')) {
 $id = intval($_GET['id']);
 $type = trim($_GET['type']);
 $name = trim($_GET['name']);
-$page = intval($_GET['page']);
+
+$_G['setting']['maxpage'] = $_G['setting']['maxpage'] ? $_G['setting']['maxpage'] : 100;
+$page = intval($_GET['page']) > $_G['setting']['maxpage'] ? $_G['setting']['maxpage'] : intval($_GET['page']);
 if($type == 'countitem') {
 	$num = 0;
 	if($id) {

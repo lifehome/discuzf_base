@@ -19,6 +19,8 @@ class table_forum_attachment extends discuz_table
 
 		$this->_table = 'forum_attachment';
 		$this->_pk    = 'aid';
+		$this->_pre_cache_key = 'forum_attachment_';
+		$this->_cache_ttl = 0;
 
 		parent::__construct();
 	}

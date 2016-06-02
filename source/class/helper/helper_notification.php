@@ -140,6 +140,18 @@ class helper_notification {
 			require_once libfile('function/mail');
 			$mail_subject = lang('notification', 'mail_to_user');
 			sendmail_touser($touid, $mail_subject, $notestring, $frommyapp ? 'myapp' : $type);
+			require_once libfile('function/sms');
+			$smsvar = array(
+			    'username' => $tospace['username'],
+			    'bbname' => $_G['setting']['bbname'],
+			    'sitename' => $_G['setting']['sitename'],
+			    'siteurl' => $_G['setting']['siteurl'],
+			    'smstype' => lang('template', 'notice_'.$categoryname) ? lang('template', 'notice_'.$categoryname) : lang('template', 'notice'),
+			);
+			$smsconfig = dunserialize($_G['setting']['sms']);
+			$smstemp = $smsconfig['template']['notice'];
+
+			sendsms_touser($touid, $smsvar, $smstemp, $frommyapp ? 'myapp' : $type);
 		}
 
 		if(!$system && $_G['uid'] && $touid != $_G['uid']) {

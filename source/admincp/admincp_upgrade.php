@@ -110,7 +110,7 @@ if($operation == 'patch' || $operation == 'cross') {
 			showtablerow('', '', array($file));
 		}
 		$linkurl = ADMINSCRIPT.'?action='.$theurl.'&step=2';
-		showtablerow('', '', array($lang['founder_upgrade_store_directory'].'./data/update/Discuz! X'.$version.' Release['.$release.']'));
+		showtablerow('', '', array($lang['founder_upgrade_store_directory'].'./data/update/Discuz! F'.$version.' Release['.$release.']'));
 		showtablerow('', '', array('<input type="button" class="btn" onclick="window.location.href=\''.$linkurl.'\'" value="'.$lang['founder_upgrade_download'].'">'));
 		echo upgradeinformation(0);
 	} elseif($step == 2) {
@@ -120,7 +120,7 @@ if($operation == 'patch' || $operation == 'cross') {
 			if($upgradeinfo['isupdatedb']) {
 				$discuz_upgrade->download_file($upgradeinfo, 'install/data/install.sql');
 				$discuz_upgrade->download_file($upgradeinfo, 'install/data/install_data.sql');
-				$discuz_upgrade->download_file($upgradeinfo, 'update.php', 'utility');
+				$discuz_upgrade->download_file($upgradeinfo, 'install/update.php');
 			}
 			$linkurl = 'action='.$theurl.'&step=3';
 			cpmsg('upgrade_download_complete_to_compare', $linkurl, 'loading', array('upgradeurl' => upgradeinformation(0)));
@@ -155,7 +155,7 @@ if($operation == 'patch' || $operation == 'cross') {
 		}
 
 		$linkurl = ADMINSCRIPT.'?action='.$theurl.'&step=4';
-		showtablerow('', 'colspan="2"', $lang['founder_upgrade_download_file'].' ./data/update/Discuz! X'.$version.' Release['.$release.']'.'');
+		showtablerow('', 'colspan="2"', $lang['founder_upgrade_download_file'].' ./data/update/Discuz! F'.$version.' Release['.$release.']'.'');
 		showtablerow('', 'colspan="2"', $lang['founder_upgrade_backup_file'].' ./data/back/Discuz! '.DISCUZ_VERSION.' Release['.DISCUZ_RELEASE.']'.$lang['founder_upgrade_backup_file2']);
 		showtablerow('', 'colspan="2"', '<input type="button" class="btn" onclick="window.location.href=\''.$linkurl.'\'" value="'.(!empty($modifylist) ? $lang['founder_upgrade_force'] : $lang['founder_upgrade_regular']).'" />');
 		echo upgradeinformation(0);
@@ -202,7 +202,7 @@ if($operation == 'patch' || $operation == 'cross') {
 			}
 			foreach($updatefilelist as $updatefile) {
 				$destfile = DISCUZ_ROOT.$updatefile;
-				$backfile = DISCUZ_ROOT.'./data/back/Discuz! X'.substr(DISCUZ_VERSION, 1).' Release['.DISCUZ_RELEASE.']/'.$updatefile;
+				$backfile = DISCUZ_ROOT.'./data/back/Discuz! F'.substr(DISCUZ_VERSION, 1).' Release['.DISCUZ_RELEASE.']/'.$updatefile;
 				if(is_file($destfile)) {
 					if(!$discuz_upgrade->copy_file($destfile, $backfile, 'file')) {
 						cpmsg('upgrade_backup_error', '', 'error', array('upgradeurl' => upgradeinformation(-5)));
@@ -215,12 +215,29 @@ if($operation == 'patch' || $operation == 'cross') {
 		$linkurl = ADMINSCRIPT.'?action='.$theurl.'&step=4&startupgrade=1&confirm='.$confirm.$paraftp;
 		$ftplinkurl = ADMINSCRIPT.'?action='.$theurl.'&step=4&startupgrade=1&siteftpsetting=1';
 		foreach($updatefilelist as $updatefile) {
-			$srcfile = DISCUZ_ROOT.'./data/update/Discuz! X'.$version.' Release['.$release.']/'.$updatefile;
+			$srcfile = DISCUZ_ROOT.'./data/update/Discuz! F'.$version.' Release['.$release.']/'.$updatefile;
 			if($confirm == 'ftp') {
 				$destfile = $updatefile;
 			} else {
 				$destfile = DISCUZ_ROOT.$updatefile;
 			}
+			switch ($updatefile){
+			    case 'favicon.ico':
+			    case 'static/image/common/logo.png':
+			    case 'static/image/common/logo_sc.png':
+			    case 'static/image/common/logo_sc_s.png':
+			    case 'static/image/common/watermark.gif':
+			    case 'static/image/common/watermark.png':
+			        $md5_local = md5_file(DISCUZ_ROOT.'./'.$updatefile);
+			        $md5_str = $md5_local.' *'.$updatefile;
+			        $md5_base = @file_get_contents(DISCUZ_ROOT.'./source/admincp/discuzfiles.md5');
+			        $md5_f = @file_get_contents(DISCUZ_ROOT.'./source/admincp/discuzfiles_f.md5');
+			        if(!preg_match('/'.$md5_str.'/', $md5_base.$md5_f)){
+			            continue;
+			        }
+			        break;
+			}
+
 			if(!$discuz_upgrade->copy_file($srcfile, $destfile, $confirm)) {
 				if($confirm == 'ftp') {
 					cpmsg('upgrade_ftp_upload_error',
@@ -242,10 +259,9 @@ if($operation == 'patch' || $operation == 'cross') {
 			}
 		}
 		if($upgradeinfo['isupdatedb']) {
-			$dbupdatefilearr = array('update.php', 'install/data/install.sql','install/data/install_data.sql');
+		    $dbupdatefilearr = array('install/update.php', 'install/data/install.sql','install/data/install_data.sql');
 			foreach($dbupdatefilearr as $dbupdatefile) {
-				$srcfile = DISCUZ_ROOT.'./data/update/Discuz! X'.$version.' Release['.$release.']/'.$dbupdatefile;
-				$dbupdatefile = $dbupdatefile == 'update.php' ? 'install/update.php' : $dbupdatefile;
+				$srcfile = DISCUZ_ROOT.'./data/update/Discuz! F'.$version.' Release['.$release.']/'.$dbupdatefile;
 				if($confirm == 'ftp') {
 					$destfile = $dbupdatefile;
 				} else {
@@ -283,7 +299,7 @@ if($operation == 'patch' || $operation == 'cross') {
 		dheader('Location: '.ADMINSCRIPT.'?action=upgrade&operation='.$operation.'&version='.$version.'&release='.$release.'&step=5');
 
 	} elseif($step == 5) {
-		$file = DISCUZ_ROOT.'./data/update/Discuz! X'.$version.' Release['.$release.']/updatelist.tmp';
+		$file = DISCUZ_ROOT.'./data/update/Discuz! F'.$version.' Release['.$release.']/updatelist.tmp';
 		@unlink($file);
 		@unlink(DISCUZ_ROOT.'./install/update.php');
 		C::t('common_cache')->delete('upgrade_step');
@@ -291,9 +307,9 @@ if($operation == 'patch' || $operation == 'cross') {
 		C::t('common_setting')->update('upgrade', '');
 		updatecache('setting');
 		$old_update_dir = './data/update/';
-		$new_update_dir = './data/update'.md5('update'.$_G['config']['security']['authkey']).'/';
+		$new_update_dir = './data/update'.dgmdate(TIMESTAMP, 'Ymd').md5('update'.$_G['config']['security']['authkey']).'/';
 		$old_back_dir = './data/back/';
-		$new_back_dir = './data/back'.md5('back'.$_G['config']['security']['authkey']).'/';
+		$new_back_dir = './data/back'.dgmdate(TIMESTAMP, 'Ymd').md5('back'.$_G['config']['security']['authkey']).'/';
 		$discuz_upgrade->copy_dir(DISCUZ_ROOT.$old_update_dir, DISCUZ_ROOT.$new_update_dir);
 		$discuz_upgrade->copy_dir(DISCUZ_ROOT.$old_back_dir, DISCUZ_ROOT.$new_back_dir);
 		$discuz_upgrade->rmdirs(DISCUZ_ROOT.$old_update_dir);
@@ -377,9 +393,9 @@ if($operation == 'patch' || $operation == 'cross') {
 
 			$linkurl = ADMINSCRIPT.'?action=upgrade&operation='.$type.'&version='.$upgrade['latestversion'].'&locale='.$locale.'&charset='.$charset.'&release='.$upgrade['latestrelease'];
 			if($unupgrade) {
-				$upgraderow[] = showtablerow('', '', array('Discuz! X'.$upgrade['latestversion'].'_'.$locale.'_'.$charset.$lang['version'].' [Release '.$upgrade['latestrelease'].']'.($type == 'patch' ? '('.$lang['founder_upgrade_newword'].'release)' : '').'', $lang['founder_upgrade_require_config'].' php v'.PHP_VERSION.'MYSQL v'.$dbversion, ''), TRUE);
+				$upgraderow[] = showtablerow('', '', array('Discuz! F'.$upgrade['latestversion'].'_'.$locale.'_'.$charset.$lang['version'].' [Release '.$upgrade['latestrelease'].']'.($type == 'patch' ? '('.$lang['founder_upgrade_newword'].'release)' : '').'', $lang['founder_upgrade_require_config'].' php v'.PHP_VERSION.'MYSQL v'.$dbversion, ''), TRUE);
 			} else {
-				$upgraderow[] = showtablerow('', '', array('Discuz! X'.$upgrade['latestversion'].'_'.$locale.'_'.$charset.$lang['version'].' [Release '.$upgrade['latestrelease'].']'.($type == 'patch' ? '('.$lang['founder_upgrade_newword'].'release)' : '').'', '<input type="button" class="btn" onclick="confirm(\''.$lang['founder_upgrade_backup_remind'].'\') ? window.location.href=\''.$linkurl.'\' : \'\';" value="'.$lang['founder_upgrade_automatically'].'">', '<a href="'.$upgrade['official'].'" target="_blank">'.$lang['founder_upgrade_manually'].'</a>'), TRUE);
+				$upgraderow[] = showtablerow('', '', array('Discuz! F'.$upgrade['latestversion'].'_'.$locale.'_'.$charset.$lang['version'].' [Release '.$upgrade['latestrelease'].']'.($type == 'patch' ? '('.$lang['founder_upgrade_newword'].'release)' : '').'', '<input type="button" class="btn" onclick="confirm(\''.$lang['founder_upgrade_backup_remind'].'\') ? window.location.href=\''.$linkurl.'\' : \'\';" value="'.$lang['founder_upgrade_automatically'].'">', '<a href="'.$upgrade['official'].'" target="_blank">'.$lang['founder_upgrade_manually'].'</a>'), TRUE);
 			}
 		}
 		showtablerow('class="header"','', array($lang['founder_upgrade_select_version'], '', ''));
@@ -399,7 +415,7 @@ if($operation == 'patch' || $operation == 'cross') {
 
 	$upgrade_step = C::t('common_cache')->fetch('upgrade_step');
 	$upgrade_step = dunserialize($upgrade_step['cachevalue']);
-	$file = DISCUZ_ROOT.'./data/update/Discuz! X'.$upgrade_step['version'].' Release['.$upgrade_step['release'].']/updatelist.tmp';
+	$file = DISCUZ_ROOT.'./data/update/Discuz! F'.$upgrade_step['version'].' Release['.$upgrade_step['release'].']/updatelist.tmp';
 	@unlink($file);
 	@unlink(DISCUZ_ROOT.'./install/update.php');
 	C::t('common_cache')->delete('upgrade_step');
@@ -410,4 +426,3 @@ if($operation == 'patch' || $operation == 'cross') {
 	$discuz_upgrade->rmdirs(DISCUZ_ROOT.$old_update_dir);
 	dheader('Location: '.ADMINSCRIPT.'?action=upgrade');
 }
-?>

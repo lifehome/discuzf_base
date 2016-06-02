@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: admincp_checktools.php 35926 2016-05-11 02:21:11Z nemohou $
+ *      $Id: admincp_checktools.php 35472 2015-08-03 09:06:22Z nemohou $
  */
 
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
@@ -51,7 +51,9 @@ if($operation == 'filecheck') {
 		checkfiles('data/threadcache/', '\.htm', 0);
 		checkfiles('template/', '');
 		checkfiles('api/', '');
-		checkfiles('source/', '', 1, 'discuzfiles.md5,plugin');
+		checkfiles('extend/', '');
+		checkfiles('m/', '');
+		checkfiles('source/', '', 1, 'discuzfiles.md5,discuzfiles_f.md5,plugin');
 		checkfiles('static/', '');
 		checkfiles('archiver/', '');
 		checkfiles('uc_client/', '\.php|\.htm', 0);
@@ -79,6 +81,7 @@ if($operation == 'filecheck') {
 			'dateline' => $_G['timestamp'],
 		), false, true);
 
+		$modifylist = array();
 		foreach($discuzfiles as $line) {
 			$file = trim(substr($line, 34));
 			$md5datanew[$file] = substr($line, 0, 32);
@@ -86,6 +89,19 @@ if($operation == 'filecheck') {
 				$modifylist[$file] = $md5data[$file];
 			}
 			$md5datanew[$file] = $md5data[$file];
+		}
+
+		if($discuzfiles = @file('./source/admincp/discuzfiles_f.md5')) {
+		    foreach($discuzfiles as $line) {
+		        $file = trim(substr($line, 34));
+		        $md5datanew[$file] = substr($line, 0, 32);
+		        if($md5datanew[$file] == $md5data[$file]){
+		            if(isset($modifylist[$file])){
+		                unset($modifylist[$file]);
+		            }
+		            $md5datanew[$file] = $md5data[$file];
+		        }
+		    }
 		}
 
 		$weekbefore = TIMESTAMP - 604800;
@@ -358,6 +374,38 @@ if($operation == 'filecheck') {
 
 	echo '<script language="javascript">alert(\''.str_replace(array('\'', "\n", "\r"), array('\\\'', '\n', ''), $alertmsg).'\');parent.$(\'cpform\').action=\''.ADMINSCRIPT.'?action=setting&edit=yes\';parent.$(\'cpform\').target=\'_self\';parent.$(\'cpform\').operation.value=\'mail\';</script>';
 
+} elseif($operation == 'smscheck') {
+	$oldsms = dunserialize($_G['setting']['sms']);
+	$oldpasswd = $oldsms['auth_passwd'] ? $oldsms['auth_passwd']{0}.'********'.substr($oldsms['auth_passwd'], -2) : '';
+	$settingnew = $_GET['settingnew'];
+	if($oldpasswd == $settingnew['sms']['auth_passwd']){
+	    $settingnew['sms']['auth_passwd'] = $oldsms['auth_passwd'];
+	}
+
+    $test_smsid = $_GET['test_smsid'];
+    $test_sign = $_GET['test_sign'];
+    $test_msg = $_GET['test_msg'];
+	$test_to = $_GET['test_to'];
+	$test_temp = '';
+	foreach ($settingnew['sms']['template'] as $k=>$v){
+	    if(preg_match('/^'.$test_sign.'.*'.$test_smsid.'$/isU', $v)){
+	        $test_temp = $v;
+	        break;
+	    }
+	}
+	$_G['setting']['sms'] = serialize($settingnew['sms']);
+	include libfile('function/sms');
+	$succeed = sendsms($test_to, $test_msg, $test_temp);
+
+	$alertmsg = '';
+	if($succeed) {
+		$alertmsg = $lang['setting_sms_check_success']."【{$test_sign}】$test_msg";
+	} else {
+		$alertmsg = $lang['setting_sms_check_error'].$alertmsg;
+	}
+
+	echo '<script language="javascript">alert(\''.str_replace(array('\'', "\n", "\r"), array('\\\'', '\n', ''), $alertmsg).'\');parent.$(\'cpform\').action=\''.ADMINSCRIPT.'?action=setting&edit=yes\';parent.$(\'cpform\').target=\'_self\';parent.$(\'cpform\').operation.value=\'sms\';</script>';
+
 } elseif($operation == 'imagepreview') {
 
 	$settingnew = $_GET['settingnew'];
@@ -574,7 +622,7 @@ function checkhook($currentdir, $ext = '', $sub = 1, $skip = '') {
 			} else {
 				$data = file_get_contents($file);
 				$hooks = array();
-				preg_replace("/\{hook\/(\w+?)(\s+(.+?))?\}/ie", "findhook('\\1', '\\3')", $data);
+				preg_replace_callback("/\{hook\/(\w+?)(\s+(.+?))?\}/i", 'checkhook_callback_findhook_13', $data);
 				if($hooks) {
 					foreach($hooks as $v) {
 						$hookdata[$file][$v][] = $v;
@@ -585,6 +633,10 @@ function checkhook($currentdir, $ext = '', $sub = 1, $skip = '') {
 	}
 }
 
+function checkhook_callback_findhook_13($matches) {
+	return findhook($matches[1], $matches[3]);
+}
+
 function findhook($hookid, $key) {
 	global $hooks;
 	if($key) {
@@ -592,4 +644,5 @@ function findhook($hookid, $key) {
 	}
 	$hooks[] = '<!--{hook/'.$hookid.$key.'}-->';
 }
+
 ?>

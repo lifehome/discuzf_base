@@ -231,7 +231,7 @@ var rowtypedata = [
 			[1, '<input type="text" class="txt" size="2" name="newdisplayorder[]" value="0">', 'td28'],
 			[1, '<input type="text" class="txt" size="15" name="newtitle[]">'],
 			[1, '<input type="text" class="txt" size="15" name="newidentifier[]">'],
-			[1, '<select name="newtype[]"><option value="number">$lang[threadtype_edit_vars_type_number]</option><option value="text" selected>$lang[threadtype_edit_vars_type_text]</option><option value="textarea">$lang[threadtype_edit_vars_type_textarea]</option><option value="radio">$lang[threadtype_edit_vars_type_radio]</option><option value="checkbox">$lang[threadtype_edit_vars_type_checkbox]</option><option value="select">$lang[threadtype_edit_vars_type_select]</option><option value="calendar">$lang[threadtype_edit_vars_type_calendar]</option><option value="email">$lang[threadtype_edit_vars_type_email]</option><option value="image">$lang[threadtype_edit_vars_type_image]</option><option value="url">$lang[threadtype_edit_vars_type_url]</option><option value="range">$lang[threadtype_edit_vars_type_range]</option></select>'],
+			[1, '<select name="newtype[]"><option value="number">$lang[threadtype_edit_vars_type_number]</option><option value="text" selected>$lang[threadtype_edit_vars_type_text]</option><option value="textarea">$lang[threadtype_edit_vars_type_textarea]</option><option value="radio">$lang[threadtype_edit_vars_type_radio]</option><option value="checkbox">$lang[threadtype_edit_vars_type_checkbox]</option><option value="select">$lang[threadtype_edit_vars_type_select]</option><option value="calendar">$lang[threadtype_edit_vars_type_calendar]</option><option value="email">$lang[threadtype_edit_vars_type_email]</option><option value="mobile">$lang[threadtype_edit_vars_type_mobile]</option><option value="image">$lang[threadtype_edit_vars_type_image]</option><option value="url">$lang[threadtype_edit_vars_type_url]</option><option value="range">$lang[threadtype_edit_vars_type_range]</option></select>'],
 			[1, '']
 		],
 	];
@@ -358,7 +358,7 @@ EOT;
 		showsetting('threadtype_edit_desc', 'descriptionnew', $option['description'], 'textarea');
 		showsetting('threadtype_unit', 'unitnew', $option['unit'], 'text');
 		showsetting('threadtype_expiration', 'expirationnew', $option['expiration'], 'radio');
-		if(in_array($option['type'], array('calendar', 'number', 'text', 'email', 'textarea'))) {
+		if(in_array($option['type'], array('calendar', 'number', 'text', 'email', 'mobile', 'textarea'))) {
 			showsetting('threadtype_protect', 'protectnew[status]', $option['protect']['status'], 'radio', 0, 1);
 			showsetting('threadtype_protect_mode', array('protectnew[mode]', array(
 				array(1, $lang['threadtype_protect_mode_pic']),

@@ -10,6 +10,10 @@
 define('IN_API', true);
 define('CURSCRIPT', 'api_mserver');
 define('APPTYPEID', 200);
+define('IS_CLI',PHP_SAPI=='cli'? 1 : 0);
+if(IS_CLI){
+    chdir(dirname(__FILE__));
+}
 
 $_ENV['remote'] = new discuz_remote();
 $_ENV['remote']->init();
@@ -67,6 +71,7 @@ class discuz_remote {
 			unset($_GET['sign']);
 
 			if (empty($sign) || $sign != $this->sign($_GET)) {
+				!IS_CLI && remote_service::error(2, 'sign is wrong');
 			}
 		}
 

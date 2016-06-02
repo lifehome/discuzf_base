@@ -55,16 +55,36 @@ if($_GET['view'] == true) {
 	ob_start();
 	include template('mobile/forum/discuz');
 } else {
+	if($_G['setting']['domain']['app']['mobile']) {
+		$url = 'http://'.$_G['setting']['domain']['app']['mobile'];
+		$file = 'newmobiledomain.png';
+	} elseif($_G['setting']['mobile']['allowmnew']) {
+		$url = $_G['siteurl'].'m/';
+		$file = 'newmobileurl.png';
+	} else {
+		$url = $_G['siteurl'];
+		$file = 'newmobile.png';
+	}
+	$qrimg = DISCUZ_ROOT.'./data/cache/'.$file;
+	if(!file_exists($qrimg)) {
+		require_once DISCUZ_ROOT.'source/plugin/mobile/qrcode.class.php';
+		QRcode::png($url, $qrimg, QR_ECLEVEL_Q, 4);
+	}
 	include template('mobile/common/preview');
 }
 function output_preview() {
 	$content = ob_get_contents();
 	ob_end_clean();
 	ob_start();
-	$content = preg_replace("/\<a href=\"(.*?)\"[\s]?\>(.*?)\<\/a\>/e", "replace_href('\\2', '\\1')", $content);
+	$content = preg_replace_callback("/\<a href=\"(.*?)\"[\s]?\>(.*?)\<\/a\>/", 'output_preview_callback_replace_href_21', $content);
 	echo $content;
 	exit;
 }
+
+function output_preview_callback_replace_href_21($matches) {
+	return replace_href($matches[2], $matches[1]);
+}
+
 function replace_href($html_str, $other1, $other2) {
 	$string = "<span class='lkcss'>".stripslashes($html_str)."</span>";
 	return $string;

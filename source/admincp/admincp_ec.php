@@ -72,6 +72,7 @@ if($operation == 'alipay') {
 			array('nav_ec_config', 'setting&operation=ec', 0),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
 			array('nav_ec_alipay', 'ec&operation=alipay', 1),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 0),
 			array('nav_ec_orders', 'ec&operation=orders', 0),
 			array('nav_ec_tradelog', 'tradelog', 0),
@@ -133,7 +134,61 @@ EOT;
 		cpmsg('alipay_succeed', 'action=ec&operation=alipay', 'succeed');
 
 	}
+} elseif($operation == 'wxpay') {
+    $settings = C::t('common_setting')->fetch_all(array('ec_wxpay_appid', 'ec_wxpay_appsecret', 'ec_wxpay_mch_id','ec_wxpay_key'));
+    $ec_wxpay_appid = $settings['ec_wxpay_appid'];
+    $ec_wxpay_appsecret = $settings['ec_wxpay_appsecret'] ? $settings['ec_wxpay_appsecret']{0}.'********'.substr($settings['ec_wxpay_appsecret'], -4) : '';
+    $ec_wxpay_mch_id = $settings['ec_wxpay_mch_id'];
+    $ec_wxpay_key = $settings['ec_wxpay_key'] ? $settings['ec_wxpay_key']{0}.'********'.substr($settings['ec_wxpay_key'], -4) : '';//API密鑰
 
+    if(!empty($checktype)) {
+        require_once DISCUZ_ROOT.'./api/trade/api_wxpay.php';
+        if($checktype == 'credit') {
+            ob_end_clean();
+            dheader('location: '.credit_payurl(0.01, $orderid));
+        }
+        exit;
+    }
+
+    if(!submitcheck('wxpaysubmit')) {
+        shownav('extended', 'nav_ec');
+        showsubmenu('nav_ec', array(
+            array('nav_ec_config', 'setting&operation=ec', 0),
+            array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
+            array('nav_ec_alipay', 'ec&operation=alipay', 0),
+            array('nav_ec_wxpay', 'ec&operation=wxpay', 1),
+            array('nav_ec_credit', 'ec&operation=credit', 0),
+            array('nav_ec_orders', 'ec&operation=orders', 0),
+            array('nav_ec_tradelog', 'tradelog', 0),
+            array('nav_ec_inviteorders', 'ec&operation=inviteorders', 0)
+        ));
+        showtips('ec_wxpay_tips');
+        showformheader('ec&operation=wxpay');
+        showtableheader('');
+        showtitle('ec_wxpay');
+        showsetting('ec_wxpay_appid', 'settingswx[ec_wxpay_appid]', $ec_wxpay_appid, 'text');
+        showsetting('ec_wxpay_appsecret', 'settingswx[ec_wxpay_appsecret]', $ec_wxpay_appsecret, 'text');
+        showsetting('ec_wxpay_mch_id', 'settingswx[ec_wxpay_mch_id]', $ec_wxpay_mch_id, 'text');
+        showsetting('ec_wxpay_key', 'settingswx[ec_wxpay_key]', $ec_wxpay_key, 'text');
+        showsetting('ec_wxpay_check', '', '',
+            '<a href="'.ADMINSCRIPT.'?action=ec&operation=wxpay&checktype=credit" target="_blank">'.$lang['ec_wxpay_checklink_credit'].'</a><br />'
+            );
+        showsubmit('wxpaysubmit');
+        showtablefooter();
+        showformfooter();
+    }else{
+        $settingswx = $_GET['settingswx'];
+        C::t('common_setting')->update('ec_wxpay_appid', $settingswx['ec_wxpay_appid']);
+        if($ec_wxpay_appsecret != $settingswx['ec_wxpay_appsecret']){
+            C::t('common_setting')->update('ec_wxpay_appsecret', $settingswx['ec_wxpay_appsecret']);
+        }
+        C::t('common_setting')->update('ec_wxpay_mch_id', $settingswx['ec_wxpay_mch_id']);
+        if($ec_wxpay_key != $settingswx['ec_wxpay_key']){
+            C::t('common_setting')->update('ec_wxpay_key', $settingswx['ec_wxpay_key']);
+        }
+        updatecache('setting');
+        cpmsg('wxpay_succeed', 'action=ec&operation=wxpay', 'succeed');
+    }
 } elseif($operation == 'tenpay') {
 
 	$settings = C::t('common_setting')->fetch_all(array('ec_tenpay_direct', 'ec_tenpay_account', 'ec_tenpay_bargainor', 'ec_tenpay_key', 'ec_tenpay_opentrans_chnid', 'ec_tenpay_opentrans_key'));
@@ -185,6 +240,7 @@ EOT;
 			array('nav_ec_config', 'setting&operation=ec', 0),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 1),
 			array('nav_ec_alipay', 'ec&operation=alipay', 0),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 0),
 			array('nav_ec_orders', 'ec&operation=orders', 0),
 			array('nav_ec_tradelog', 'tradelog', 0),
@@ -252,6 +308,7 @@ EOT;
 	$orderurl = array(
 		'alipay' => 'https://www.alipay.com/trade/query_trade_detail.htm?trade_no=',
 		'tenpay' => 'https://www.tenpay.com/med/tradeDetail.shtml?trans_id=',
+	    'wxpay' => 'https://pay.weixin.qq.com/index.php/trade/search_new#',
 	);
 
 	if(!$_G['setting']['creditstrans'] || !$_G['setting']['ec_ratio']) {
@@ -266,6 +323,7 @@ EOT;
 			array('nav_ec_config', 'setting&operation=ec', 0),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
 			array('nav_ec_alipay', 'ec&operation=alipay', 0),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 0),
 			array('nav_ec_orders', 'ec&operation=orders', 1),
 			array('nav_ec_tradelog', 'tradelog', 0),
@@ -297,7 +355,7 @@ EOT;
 			$start_limit = ($page - 1) * $_G['tpp'];
 
 
-			$ordercount = C::t('forum_order')->count_by_search(null, $_GET['orderstatus'], $_GET['orderid'], null, ($_GET['users'] ? explode(',', str_replace(' ', '', $_GET['users'])) : null), $_GET['buyer'], $_GET['admin'], strtotime($_GET['sstarttime']), strtotime($_GET['sendtime']), strtotime($_GET['cstarttime']), strtotime($_GET['cendtime']));
+			$ordercount = C::t('forum_order')->count_by_search(null, $_GET['orderstatus'], $_GET['orderid'], null, null, ($_GET['users'] ? explode(',', str_replace(' ', '', $_GET['users'])) : null), $_GET['buyer'], $_GET['admin'], strtotime($_GET['sstarttime']), strtotime($_GET['sendtime']), strtotime($_GET['cstarttime']), strtotime($_GET['cendtime']));
 			$multipage = multi($ordercount, $_G['tpp'], $page, ADMINSCRIPT."?action=ec&operation=orders&searchsubmit=yes&orderstatus={$_GET['orderstatus']}&orderid={$_GET['orderid']}&users={$_GET['users']}&buyer={$_GET['buyer']}&admin={$_GET['admin']}&sstarttime={$_GET['sstarttime']}&sendtime={$_GET['sendtime']}&cstarttime={$_GET['cstarttime']}&cendtime={$_GET['cendtime']}");
 
 			showtagheader('div', 'orderlist', TRUE);
@@ -398,6 +456,7 @@ EOT;
 			array('nav_ec_config', 'setting&operation=ec', 0),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
 			array('nav_ec_alipay', 'ec&operation=alipay', 0),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 1),
 			array('nav_ec_orders', 'ec&operation=orders', 0),
 			array('nav_ec_tradelog', 'tradelog', 0),
@@ -455,38 +514,52 @@ EOT;
 		$orderurl = array(
 			'alipay' => 'https://www.alipay.com/trade/query_trade_detail.htm?trade_no=',
 			'tenpay' => 'https://www.tenpay.com/med/tradeDetail.shtml?trans_id=',
+		    'wxpay' => 'https://pay.weixin.qq.com/index.php/trade/search_new#',
 		);
 		shownav('extended', 'nav_ec');
 		showsubmenu('nav_ec', array(
 			array('nav_ec_config', 'setting&operation=ec', 0),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
 			array('nav_ec_alipay', 'ec&operation=alipay', 0),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 0),
 			array('nav_ec_orders', 'ec&operation=orders', 0),
 			array('nav_ec_tradelog', 'tradelog', 0),
 			array('nav_ec_inviteorders', 'ec&operation=inviteorders', 1)
 		));
-
-		$ordercount = C::t('forum_order')->count_by_search(0, $_GET['orderstatus'], $_GET['orderid'], $_GET['email']);
-		$multipage = multi($ordercount, $_G['tpp'], $page, ADMINSCRIPT."?action=ec&operation=inviteorders&orderstatus={$_GET['orderstatus']}&orderid={$_GET['orderid']}&email={$_GET['email']}");
+		if($_GET['tradeid'] && $_GET['paytype']){
+		    $buyer = $_GET['tradeid']."\t".$_GET['paytype'];
+		}else{
+		    $buyer = $_GET['tradeid']?$_GET['tradeid']:($_GET['paytype']?$_GET['paytype']:'');
+		}
+		$ordercount = C::t('forum_order')->count_by_search(0, $_GET['orderstatus'], $_GET['orderid'], $_GET['email'], $_GET['sms'], null, $buyer);
+		$multipage = multi($ordercount, $_G['tpp'], $page, ADMINSCRIPT."?action=ec&operation=inviteorders&orderstatus={$_GET['orderstatus']}&orderid={$_GET['orderid']}&email={$_GET['email']}&tradeid={$_GET['tradeid']}&paytype={$_GET['paytype']}");
 
 		showtagheader('div', 'orderlist', TRUE);
 		showformheader('ec&operation=inviteorders');
 		showtableheader('ec_inviteorders_search');
 		$_G['showsetting_multirow'] = 1;
+		showsetting('ec_orders_search_id', 'orderid', $_GET['orderid'], 'text');
+		showsetting('ec_orders_search_email', 'email', $_GET['email'], 'text');
+		showsetting('ec_orders_search_sms', 'sms', $_GET['sms'], 'text');
+		showsetting('ec_orders_search_paytype', array('paytype', array(
+		    array('', $lang['ec_orders_search_paytype_all']),
+		    array('alipay',$lang['ec_orders_search_paytype_alipay']),
+		    array('tenpay',$lang['ec_orders_search_paytype_tenpay']),
+		    array('wxpay',$lang['ec_orders_search_paytype_wxpay']),
+		)), $_GET['paytype'], 'select');
+		showsetting('ec_orders_search_tradeid', 'tradeid', $_GET['tradeid'], 'text');
 		showsetting('ec_orders_search_status', array('orderstatus', array(
 			array('', $lang['ec_orders_search_status_all']),
 			array(1, $lang['ec_orders_search_status_pending']),
 			array(2, $lang['ec_orders_search_status_auto_finished'])
 		)), intval($_GET['orderstatus']), 'select');
-		showsetting('ec_orders_search_id', 'orderid', $_GET['orderid'], 'text');
-		showsetting('ec_orders_search_email', 'email', $_GET['email'], 'text');
 		showsubmit('searchsubmit', 'submit');
 		showtablefooter();
 		showtableheader('result');
-		showsubtitle(array('', 'ec_orders_id', 'ec_inviteorders_status', 'ec_inviteorders_buyer', 'ec_orders_amount', 'ec_orders_price', 'ec_orders_submitdate', 'ec_orders_confirmdate'));
+		showsubtitle(array('', 'ec_orders_id', 'ec_inviteorders_status', 'ec_inviteorders_buyer', 'ec_orders_num', 'ec_orders_price', 'ec_orders_submitdate', 'ec_orders_confirmdate'));
 
-		foreach(C::t('forum_order')->fetch_all_by_search(0, $_GET['orderstatus'], $_GET['orderid'], $_GET['email'], null, null, null, null, null, null, null, $start_limit, $_G['tpp']) as $order) {
+		foreach(C::t('forum_order')->fetch_all_by_search(0, $_GET['orderstatus'], $_GET['orderid'], $_GET['email'], null, $buyer, null, null, null, null, null, $start_limit, $_G['tpp']) as $order) {
 			switch($order['status']) {
 				case 1: $order['orderstatus'] = $lang['ec_orders_search_status_pending']; break;
 				case 2: $order['orderstatus'] = '<b>'.$lang['ec_orders_search_status_auto_finished'].'</b>'; break;
@@ -497,14 +570,14 @@ EOT;
 
 			list($orderid, $apitype) = explode("\t", $order['buyer']);
 			$apitype = $apitype ? $apitype : 'alipay';
-			$orderid = '<a href="'.$orderurl[$apitype].$orderid.'" target="_blank">'.$orderid.'</a>';
+			$orderid = $orderid ? '<a href="'.$orderurl[$apitype].$orderid.'" target="_blank">'.$orderid.'</a>' : '';
 			showtablerow('', '', array(
-				"<input class=\"checkbox\" type=\"checkbox\" name=\"validate[]\" value=\"$order[orderid]\" ".($order['status'] != 1 ? 'disabled' : '').">",
-				"$order[orderid]<br />$orderid",
+				"<input class=\"checkbox\" type=\"checkbox\" name=\"validate[]\" value=\"{$order['orderid']}\" ".($order['status'] != 1 ? 'disabled' : '').">",
+				"{$order['orderid']}<br />$orderid".($orderid && $apitype?'('.$lang['ec_orders_search_paytype_'.$apitype].')':''),
 				$order['orderstatus'],
-				"$order[email]<br>$order[ip]",
+				($order['email'] && $order['sms'] ? "{$order['email']}/{$order['sms']}" : $order['email'] ? $order['email'] : $order['sms'] )."<br>{$order['ip']}",
 				$order['amount'],
-				"$lang[rmb] $order[price] $lang[rmb_yuan]",
+				"{$lang['rmb']} {$order['price']} {$lang['rmb_yuan']}",
 				$order['submitdate'],
 				$order['confirmdate']
 			));

@@ -76,6 +76,50 @@ class helper_seccheck {
 		return $seccode;
 	}
 
+	public static function make_smscode($sms, $smscode = ''){
+	    global $_G;
+	    C::t('common_smscodecheck')->delete_expiration();
+	    if(!$smscode) {
+	        $old = C::t('common_smscodecheck')->get_code_by_sms($sms);
+	        if($old && $old['dateline']>TIMESTAMP-600){
+	            $smscode = $old['code'];
+	        }else{
+    	        $length = $_G['setting']['smscodelength'] ? $_G['setting']['smscodelength'] : 6;
+    	        $type = $_G['setting']['smscodetype'] ? $_G['setting']['smscodetype'] : 2;
+    	        if($type == 3){
+    	            $seccodeunits = 'BCEFGHJKMPQRTVWXY2346789';
+    	        }elseif($type == 1){
+    	            $seccodeunits = 'CEFHKLMNOPQRSTUVWXYZ';
+    	        }else{
+    	            $seccodeunits = '1234567890';
+    	        }
+    	        $smscode = '';
+    	        for($i = 0; $i < $length; $i++) {
+    	            $c = rand(0, strlen($seccodeunits)-1);
+    	            $smscode .= $seccodeunits{$c};
+    	        }
+	        }
+	    }
+	    C::t('common_smscodecheck')->insert(array(
+	        'dateline' => TIMESTAMP,
+	        'sms' => $sms,
+	        'code' => $smscode,
+	        'succeed' => 0,
+	        'verified' => 0,
+	    ), true);
+	    return $smscode;
+	}
+
+	public static function check_smscode($value, $sms) {
+		global $_G;
+		$smscode = C::t('common_smscodecheck')->get_code_by_code_sms($sms,$value);
+		if(empty($smscode)){
+		    return false;
+		}
+		C::t('common_smscodecheck')->update_succeed($smscode['id']);
+		return true;
+	}
+
 	public static function make_secqaa() {
 		global $_G;
 		loadcache('secqaa');

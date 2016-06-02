@@ -4,7 +4,7 @@
 	[UCenter] (C)2001-2099 Comsenz Inc.
 	This is NOT a freeware, use is subject to license terms
 
-	$Id: user.php 1179 2014-11-03 07:11:25Z hypowang $
+	$Id: user.php 1178 2014-11-03 07:05:21Z hypowang $
 */
 
 !defined('IN_UC') && exit('Access Denied');
@@ -35,6 +35,11 @@ class usermodel {
 
 	function get_user_by_email($email) {
 		$arr = $this->db->fetch_first("SELECT * FROM ".UC_DBTABLEPRE."members WHERE email='$email'");
+		return $arr;
+	}
+
+	function get_user_by_sms($sms) {
+		$arr = $this->db->fetch_first("SELECT * FROM ".UC_DBTABLEPRE."members WHERE sms='$sms'");
 		return $arr;
 	}
 
@@ -93,6 +98,10 @@ class usermodel {
 		return strlen($email) > 6 && strlen($email) <= 32 && preg_match("/^([a-z0-9\-_.+]+)@([a-z0-9\-]+[.][a-z0-9\-.]+)$/", $email);
 	}
 
+	function check_smsformat($sms) {
+		return strlen($sms) > 10 && strlen($sms) <= 15 && preg_match("/^1\d{10}$/", $sms);
+	}
+
 	function check_emailaccess($email) {
 		$setting = $this->base->get_setting(array('accessemail', 'censoremail'));
 		$accessemail = $setting['accessemail'];
@@ -116,6 +125,12 @@ class usermodel {
 		return $email;
 	}
 
+	function check_smsexists($sms, $username = '') {
+		$sqladd = $username !== '' ? "AND username<>'$username'" : '';
+		$sms = $this->db->result_first("SELECT sms FROM  ".UC_DBTABLEPRE."members WHERE sms='$sms' $sqladd");
+		return $sms;
+	}
+
 	function check_login($username, $password, &$user) {
 		$user = $this->get_user_by_username($username);
 		if(empty($user['username'])) {
@@ -126,25 +141,25 @@ class usermodel {
 		return $user['uid'];
 	}
 
-	function add_user($username, $password, $email, $uid = 0, $questionid = '', $answer = '', $regip = '') {
+	function add_user($username, $password, $email, $sms, $uid = 0, $questionid = '', $answer = '', $regip = '') {
 		$regip = empty($regip) ? $this->base->onlineip : $regip;
 		$salt = substr(uniqid(rand()), -6);
 		$password = md5(md5($password).$salt);
 		$sqladd = $uid ? "uid='".intval($uid)."'," : '';
 		$sqladd .= $questionid > 0 ? " secques='".$this->quescrypt($questionid, $answer)."'," : " secques='',";
-		$this->db->query("INSERT INTO ".UC_DBTABLEPRE."members SET $sqladd username='$username', password='$password', email='$email', regip='$regip', regdate='".$this->base->time."', salt='$salt'");
+		$this->db->query("INSERT INTO ".UC_DBTABLEPRE."members SET $sqladd username='$username', password='$password', email='$email', sms='$sms', regip='$regip', regdate='".$this->base->time."', salt='$salt'");
 		$uid = $this->db->insert_id();
 		$this->db->query("INSERT INTO ".UC_DBTABLEPRE."memberfields SET uid='$uid'");
 		return $uid;
 	}
 
-	function edit_user($username, $oldpw, $newpw, $email, $ignoreoldpw = 0, $questionid = '', $answer = '') {
+	function edit_user($username, $oldpw, $newpw, $email, $sms, $ignoreoldpw = 0, $questionid = '', $answer = '') {
 		$data = $this->db->fetch_first("SELECT username, uid, password, salt FROM ".UC_DBTABLEPRE."members WHERE username='$username'");
 
 		if($ignoreoldpw) {
 			$isprotected = $this->db->result_first("SELECT COUNT(*) FROM ".UC_DBTABLEPRE."protectedmembers WHERE uid = '$data[uid]'");
 			if($isprotected) {
-				return -8;
+				return -10;
 			}
 		}
 
@@ -154,6 +169,7 @@ class usermodel {
 
 		$sqladd = $newpw ? "password='".md5(md5($newpw).$data['salt'])."'" : '';
 		$sqladd .= $email ? ($sqladd ? ',' : '')." email='$email'" : '';
+		$sqladd .= $sms ? ($sqladd ? ',' : '')." sms='$sms'" : '';
 		if($questionid !== '') {
 			if($questionid > 0) {
 				$sqladd .= ($sqladd ? ',' : '')." secques='".$this->quescrypt($questionid, $answer)."'";
@@ -161,11 +177,11 @@ class usermodel {
 				$sqladd .= ($sqladd ? ',' : '')." secques=''";
 			}
 		}
-		if($sqladd || $emailadd) {
+		if($sqladd) {
 			$this->db->query("UPDATE ".UC_DBTABLEPRE."members SET $sqladd WHERE username='$username'");
 			return $this->db->affected_rows();
 		} else {
-			return -7;
+			return -9;
 		}
 	}
 

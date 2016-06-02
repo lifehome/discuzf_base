@@ -84,6 +84,7 @@ class discuz_application extends discuz_base{
 		define('ICONV_ENABLE', function_exists('iconv'));
 		define('MB_ENABLE', function_exists('mb_convert_encoding'));
 		define('EXT_OBGZIP', function_exists('ob_gzhandler'));
+		defined('IS_CLI') || define('IS_CLI',PHP_SAPI=='cli'? 1 : 0);
 
 		define('TIMESTAMP', time());
 		$this->timezone_set();
@@ -184,6 +185,9 @@ class discuz_application extends discuz_base{
 		} elseif(defined('IN_ARCHIVER')) {
 			$sitepath = preg_replace("/\/archiver/i", '', $sitepath);
 		}
+		if(defined('IN_NEWMOBILE')) {
+			$sitepath = preg_replace("/\/m/i", '', $sitepath);
+		}
 		$_G['isHTTPS'] = ($_SERVER['HTTPS'] && strtolower($_SERVER['HTTPS']) != 'off') ? true : false;
 		$_G['siteurl'] = dhtmlspecialchars('http'.($_G['isHTTPS'] ? 's' : '').'://'.$_SERVER['HTTP_HOST'].$sitepath.'/');
 
@@ -242,6 +246,19 @@ class discuz_application extends discuz_base{
 
 		if($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST)) {
 			$_GET = array_merge($_GET, $_POST);
+		}
+
+		$this->var['iscli'] = IS_CLI;
+		if(IS_CLI){
+		    $pathinfo = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
+		    if($pathinfo){
+		        $arr = explode('/', $pathinfo);
+		        $arrcount = count($arr);
+		        for($i = 0; $i < count($arr)/2; ++$i){
+		            $_GET[$arr[$i]] = isset($arr[($i+1)]) ? $arr[($i+1)] : '';
+		        }
+
+		    }
 		}
 
 		if(isset($_GET['page'])) {
@@ -377,17 +394,19 @@ class discuz_application extends discuz_base{
 
 	private function _get_client_ip() {
 		$ip = $_SERVER['REMOTE_ADDR'];
-		if (isset($_SERVER['HTTP_CLIENT_IP']) && preg_match('/^([0-9]{1,3}\.){3}[0-9]{1,3}$/', $_SERVER['HTTP_CLIENT_IP'])) {
-			$ip = $_SERVER['HTTP_CLIENT_IP'];
-		} elseif(isset($_SERVER['HTTP_X_FORWARDED_FOR']) AND preg_match_all('#\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}#s', $_SERVER['HTTP_X_FORWARDED_FOR'], $matches)) {
-			foreach ($matches[0] AS $xip) {
-				if (!preg_match('#^(10|172\.16|192\.168)\.#', $xip)) {
-					$ip = $xip;
-					break;
+		if (!$this->config['security']['onlyremoteaddr']) {
+			if (isset($_SERVER['HTTP_CLIENT_IP']) && preg_match('/^([0-9]{1,3}\.){3}[0-9]{1,3}$/', $_SERVER['HTTP_CLIENT_IP'])) {
+				$ip = $_SERVER['HTTP_CLIENT_IP'];
+			} elseif(isset($_SERVER['HTTP_X_FORWARDED_FOR']) AND preg_match_all('#\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}#s', $_SERVER['HTTP_X_FORWARDED_FOR'], $matches)) {
+				foreach ($matches[0] AS $xip) {
+					if (!preg_match('#^(10|172\.16|192\.168)\.#', $xip)) {
+						$ip = $xip;
+						break;
+					}
 				}
 			}
 		}
-		return $ip;
+		return $ip == '::1' ? '127.0.0.1' : $ip;
 	}
 
 	private function _init_db() {
@@ -614,7 +633,7 @@ class discuz_application extends discuz_base{
 				$closedreason = C::t('common_setting')->fetch('closedreason');
 				$closedreason = str_replace(':', '&#58;', $closedreason);
 				if(!defined('IN_MOBILE_API')) {
-					showmessage($closedreason ? $closedreason : 'board_closed', NULL, array('adminemail' => $this->var['setting']['adminemail']), array('login' => 1));
+					showmessage($closedreason ? $closedreason : 'board_closed', NULL, array('adminemail' => $this->var['setting']['adminemail'],'adminmobile' => $this->var['setting']['adminmobile']), array('login' => 1));
 				} else {
 					mobile_core::result(array('error' => $closedreason ? $closedreason : 'board_closed'));
 				}
@@ -765,7 +784,7 @@ class discuz_application extends discuz_base{
 			}
 		}
 
-		if(strpos($this->var['setting']['domain']['defaultindex'], CURSCRIPT) !== false && CURSCRIPT != 'forum' && !$_GET['mod']) {
+		if(strpos($this->var['setting']['domain']['defaultindex'], CURSCRIPT) !== false && !in_array(CURSCRIPT, array('forum', 'plugin')) && !$_GET['mod']) {
 			if($this->var['setting']['domain']['app']['mobile']) {
 				$mobileurl = 'http://'.$this->var['setting']['domain']['app']['mobile'];
 			} else {
@@ -819,8 +838,8 @@ class discuz_application extends discuz_base{
 
 		$this->var['setting']['mobile']['simpletypeurl'] = array();
 		$this->var['setting']['mobile']['simpletypeurl'][0] = $this->var['siteurl'].$this->var['basefilename'].($query_sting_tmp ? '?'.$query_sting_tmp.'&' : '?').'mobile=1&simpletype=no';
-		$this->var['setting']['mobile']['simpletypeurl'][1] =  $this->var['siteurl'].$this->var['basefilename'].($query_sting_tmp ? '?'.$query_sting_tmp.'&' : '?').'mobile=1&simpletype=yes';
-		$this->var['setting']['mobile']['simpletypeurl'][2] =  $this->var['siteurl'].$this->var['basefilename'].($query_sting_tmp ? '?'.$query_sting_tmp.'&' : '?').'mobile=2';
+		$this->var['setting']['mobile']['simpletypeurl'][1] = $this->var['siteurl'].$this->var['basefilename'].($query_sting_tmp ? '?'.$query_sting_tmp.'&' : '?').'mobile=1&simpletype=yes';
+		$this->var['setting']['mobile']['simpletypeurl'][2] = $this->var['setting']['mobile']['allowmnew'] ? $this->var['siteurl'].'m/' : $this->var['siteurl'].$this->var['basefilename'].($query_sting_tmp ? '?'.$query_sting_tmp.'&' : '?').'mobile=2';
 		unset($query_sting_tmp);
 		ob_start();
 	}

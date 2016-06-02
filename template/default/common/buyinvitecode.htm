@@ -1,5 +1,5 @@
 <!--{template common/header}-->
-<div id="wp" class="wp">
+<div id="wp" class="wp ptm">
 	<div id="ct" class="wp cl">
 		<div class="mn">
 			<div class="bm">
@@ -26,14 +26,14 @@
 					<h3 class="xs2">{lang invitecode_buycode}</h3>
 				</div>
 				<div class="bm_c">
-					<form id="confirmform" class="postbox" method="post" autocomplete="off" action="misc.php?mod=buyinvitecode" onsubmit="ajaxpost(this.id, 'return_addfundsform');return false;">
+					<form id="confirmform" class="postbox" method="post" autocomplete="off" action="misc.php?mod=buyinvitecode" onsubmit="invite_submit(this);return false;">
 						<input type="hidden" name="formhash" value="{FORMHASH}" />
 						<input type="hidden" name="buysubmit" value="true" />
 						<input type="hidden" name="handlekey" value="buyinvite" />
 						<!--{if $_G['setting']['inviteconfig']['invitecodeprompt']}-->
-								<div class="rfm ptw pbm">$_G['setting'][inviteconfig][invitecodeprompt]</div>
-							<!--{/if}-->
-						<!--{if $_G['setting']['inviteconfig']['buyinvitecode'] && $_G['setting']['inviteconfig']['invitecodeprice'] && ($_G[setting][ec_tenpay_bargainor] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_account])}-->
+							<div class="rfm ptw pbm">$_G['setting'][inviteconfig][invitecodeprompt]</div>
+						<!--{/if}-->
+						<!--{if $_G['setting']['inviteconfig']['buyinvitecode'] && $_G['setting']['inviteconfig']['invitecodeprice'] && ($_G[setting][ec_tenpay_bargainor] || $_G[setting][ec_wxpay_appid] || $_G[setting][ec_tenpay_opentrans_chnid] || $_G[setting][ec_account])}-->
 						<div class="rfm">
 							<table cellpadding="0" cellspacing="0">
 								<tr>
@@ -47,6 +47,14 @@
 								<tr>
 									<th>{lang active_email}</th>
 									<td><input type="text" name="email" class="px p_fre vm" value="" /> {lang active_email_comment}</td>
+								</tr>
+							</table>
+						</div>
+						<div class="rfm">
+							<table cellpadding="0" cellspacing="0">
+								<tr>
+									<th>{lang active_sms}</th>
+									<td><input type="text" name="sms" class="px p_fre vm" value="" /> {lang active_sms_comment}</td>
 								</tr>
 							</table>
 						</div>
@@ -78,7 +86,13 @@
 											<ul>
 											<!--{if $_G[setting][ec_ratio] && $_G[setting][ec_account]}-->
 												<li class="z">
-													<input name="bank_type" type="radio" value="alipay" id="apitype_alipay" $ecchecked /><label style="width:135px;height:32px;background: #FFF url({STATICURL}image/common/alipay_logo.gif) no-repeat;border: 1px solid #DDD;vertical-align: middle;position: relative;display: inline-block;background-color: white;" for="apitype_alipay"></label>
+													<input name="bank_type" type="radio" value="alipay" id="apitype_alipay" /><label style="width:135px;height:32px;background: #FFF url({STATICURL}image/common/alipay_logo.gif) no-repeat;border: 1px solid #DDD;vertical-align: middle;position: relative;display: inline-block;background-color: white;" for="apitype_alipay"></label>
+												</li>
+											<!--{/if}-->
+											<!--{if $_G[setting][ec_ratio] && $_G[setting][ec_wxpay_appid]}-->
+												<li class="z">
+													<input name="bank_type" type="radio" value="wxpay" id="apitype_wxpay" /><label style="width:135px;height:32px;background: #FFF url({STATICURL}image/common/wxpay_logo.gif) no-repeat;border: 1px solid #DDD;vertical-align: middle;position: relative;display: inline-block;background-color: white;" for="apitype_wxpay"></label>
+													<span id="wxpay_qrcode_box"></span>
 												</li>
 											<!--{/if}-->
 											</ul>
@@ -96,6 +110,10 @@
 							</table>
 						</div>
 						<script type="text/javascript">
+							var bank_type_radio_first = document.getElementsByName('bank_type')[0];
+							if(!isUndefined(bank_type_radio_first)){
+								bank_type_radio_first.setAttribute("checked","true");
+							}
 							function addamount() {
 								var amount = $('amount').value.replace(/^0/, '');
 								amount = parseInt(amount);
@@ -104,6 +122,12 @@
 						</script>
 						<!--{/if}-->
 					</form>
+					<script type="text/javascript">
+						function invite_submit(obj){
+							ajaxpost(obj.id, 'return_addfundsform');
+							return false;
+						}
+					</script>
 					<span style="display: none" id="return_addfundsform"></span>
 				</div>
 			<!--{/if}-->

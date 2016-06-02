@@ -31,7 +31,7 @@ class magic_doodle {
 	function usesubmit() {
 		global $_G;
 
-		$config = urlencode(getsiteurl().'home.php?mod=misc&ac=swfupload&op=config&doodle=1');
+		$config = urlencode('home.php?mod=misc&ac=swfupload&op=config&doodle=1');
 		include template('home/magic_doodle');
 	}
 

@@ -508,6 +508,7 @@ function show_header() {
 	$install_lang = lang(INSTALL_LANG);
 	$title = lang('title_install');
 	$charset = CHARSET;
+	@header('Content-Type: text/html; charset='.CHARSET);
 	echo <<<EOT
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -538,7 +539,7 @@ EOT;
 function show_footer($quit = true) {
 
 	echo <<<EOT
-		<div class="footer">&copy;2001 - 2013 <a href="http://www.comsenz.com/">Comsenz</a> Inc.</div>
+		<div class="footer">&copy;2001 - 2016 <a href="http://www.comsenz.com/">Comsenz</a> Inc.</div>
 	</div>
 </div>
 </body>
@@ -1111,27 +1112,30 @@ function lang($lang_key, $force = true) {
 	return isset($GLOBALS['lang'][$lang_key]) ? $GLOBALS['lang'][$lang_key] : ($force ? $lang_key : '');
 }
 
-function check_adminuser($username, $password, $email) {
+function check_adminuser($username, $password, $email, $sms) {
 
 	include ROOT_PATH.CONFIG_UC;
 	include ROOT_PATH.'./uc_client/client.php';
 
 	$error = '';
 	$ucresult = uc_user_login($username, $password);
-	list($tmp['uid'], $tmp['username'], $tmp['password'], $tmp['email']) = uc_addslashes($ucresult);
+	list($tmp['uid'], $tmp['username'], $tmp['password'], $tmp['email'], $tmp['sms']) = uc_addslashes($ucresult);
 	$ucresult = $tmp;
 	if($ucresult['uid'] <= 0) {
-		$uid = uc_user_register($username, $password, $email);
+		$uid = uc_user_register($username, $password, $email, $sms);
 		if($uid == -1 || $uid == -2) {
 			$error = 'admin_username_invalid';
 		} elseif($uid == -4 || $uid == -5 || $uid == -6) {
 			$error = 'admin_email_invalid';
+		} elseif($uid == -7 || $uid == -8) {
+			$error = 'admin_sms_invalid';
 		} elseif($uid == -3) {
 			$error = 'admin_exist_password_error';
 		}
 	} else {
 		$uid = $ucresult['uid'];
 		$email = $ucresult['email'];
+		$sms = $ucresult['sms'];
 		$password = $ucresult['password'];
 	}
 
@@ -1142,7 +1146,7 @@ function check_adminuser($username, $password, $email) {
 		$uid = 0;
 		$error = empty($error) ? 'error_unknow_type' : $error;
 	}
-	return array('uid' => $uid, 'username' => $username, 'password' => $password, 'email' => $email, 'error' => $error);
+	return array('uid' => $uid, 'username' => $username, 'password' => $password, 'email' => $email, 'sms' => $sms, 'error' => $error);
 }
 
 function save_uc_config($config, $file) {
@@ -1228,7 +1232,7 @@ function uc_write_config($config, $file, $password) {
 }
 
 function install_uc_server() {
-	global $db, $dbhost, $dbuser, $dbpw, $dbname, $tablepre, $username, $password, $email;
+	global $db, $dbhost, $dbuser, $dbpw, $dbname, $tablepre, $username, $password, $email, $sms;
 
 	$ucsql = file_get_contents(ROOT_PATH.'./uc_server/install/uc.sql');
 	$uctablepre = $tablepre.'ucenter_';
@@ -1265,7 +1269,7 @@ function install_uc_server() {
 
 	$salt = substr(uniqid(rand()), -6);
 	$passwordmd5 = md5(md5($password).$salt);
-	$db->query("INSERT INTO {$uctablepre}members SET $sqladd username='$username', password='$passwordmd5', email='$email', regip='hidden', regdate='".time()."', salt='$salt'");
+	$db->query("INSERT INTO {$uctablepre}members SET $sqladd username='$username', password='$passwordmd5', email='$email', sms='$sms', regip='hidden', regdate='".time()."', salt='$salt'");
 	$uid = $db->insert_id();
 	$db->query("INSERT INTO {$uctablepre}memberfields SET uid='$uid'");
 

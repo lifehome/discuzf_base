@@ -29,9 +29,10 @@ class table_common_plugin extends discuz_table
 		return DB::fetch_all('SELECT * FROM %t WHERE identifier IN (%n)', array($this->_table, $identifier), 'identifier');
 	}
 
-	public function fetch_all_data($available = false) {
+	public function fetch_all_data($available = false, $catid = false) {
+		$catid = $catid ? ($available !== false ? ' AND catid='.intval($catid) : 'WHERE catid='.intval($catid)) : '';
 		$available = $available !== false ? 'WHERE available='.intval($available) : '';
-		return DB::fetch_all('SELECT * FROM %t %i ORDER BY available DESC, pluginid DESC', array($this->_table, $available));
+		return DB::fetch_all('SELECT * FROM %t %i %i ORDER BY available DESC, pluginid DESC', array($this->_table, $available, $catid));
 	}
 
 	public function fetch_all_by_identifier($identifier) {
@@ -51,6 +52,13 @@ class table_common_plugin extends discuz_table
 			return;
 		}
 		DB::delete('common_plugin', DB::field('identifier', $identifier));
+	}
+
+	public function delete_by_catid($catid) {
+		if(!$catid) {
+			return;
+		}
+		DB::update('common_plugin', array('catid'=>'0'), array('catid'=>intval($catid)));
 	}
 
 }

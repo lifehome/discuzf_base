@@ -14,7 +14,7 @@ if(!defined('IN_DISCUZ')) {
 $view = $_GET['view'];
 loadcache('forum_guide');
 if(!in_array($view, array('hot', 'digest', 'new', 'my', 'newthread', 'sofa'))) {
-	$view = 'hot';
+	$view = 'newthread';
 }
 $lang = lang('forum/template');
 $navtitle = $lang['guide'].'-'.$lang['guide_'.$view];
@@ -193,7 +193,7 @@ function get_guide_list($view, $start = 0, $num = 50, $again = 0) {
 		$threadids[] = $thread['tid'];
 		if($tids || ($n >= $start && $n < ($start + $num))) {
 			$list[$thread[tid]] = $thread;
-			$fids[$thread[fid]] = $thread['fid'];
+			$fids[] = $thread['fid'];
 		}
 		$n ++;
 	}

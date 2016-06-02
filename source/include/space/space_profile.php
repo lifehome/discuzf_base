@@ -20,6 +20,30 @@ space_merge($space, 'profile');
 space_merge($space, 'status');
 getonlinemember(array($space['uid']));
 
+if(!$space['self'] && $_G['uid'] && $_GET['additional'] != 'removevlog') {
+
+	$visitor = C::t('home_visitor')->fetch_by_uid_vuid($space['uid'], $_G['uid']);
+	$is_anonymous = empty($_G['cookie']['anonymous_visit_'.$_G['uid'].'_'.$space['uid']]) ? 0 : 1;
+	if(empty($visitor['dateline'])) {
+		$setarr = array(
+			'uid' => $space['uid'],
+			'vuid' => $_G['uid'],
+			'vusername' => $is_anonymous ? '' : $_G['username'],
+			'dateline' => $_G['timestamp']
+		);
+		C::t('home_visitor')->insert($setarr, false, true);
+		show_credit();
+	} else {
+		if($_G['timestamp'] - $visitor['dateline'] >= 300) {
+			C::t('home_visitor')->update_by_uid_vuid($space['uid'], $_G['uid'], array('dateline'=>$_G['timestamp'], 'vusername'=>$is_anonymous ? '' : $_G['username']));
+		}
+		if($_G['timestamp'] - $visitor['dateline'] >= 3600) {
+			show_credit();
+		}
+	}
+	updatecreditbyaction('visit', 0, array(), $space['uid']);
+}
+
 if($space['videophoto'] && ckvideophoto($space, 1)) {
 	$space['videophoto'] = getvideophoto($space['videophoto']);
 } else {
@@ -50,6 +74,7 @@ if($space['lastactivity']) {
 }
 if($space['lastpost']) $space['lastpost'] = dgmdate($space['lastpost']);
 if($space['lastsendmail']) $space['lastsendmail'] = dgmdate($space['lastsendmail']);
+if($space['lastsendsms']) $space['lastsendsms'] = dgmdate($space['lastsendsms']);
 
 
 if($_G['uid'] == $space['uid'] || $_G['group']['allowviewip']) {
@@ -126,7 +151,9 @@ if($count) {
 	}
 	$query = C::t('forum_forum')->fetch_all_info_by_fids($moderatefids);
 	foreach($query as $result) {
-		$manage_forum[$result['fid']] = $result['name'];
+		if($result['status'] != 0 || $space['uid'] == $_G['uid']){
+			$manage_forum[$result['fid']] = $result['name'];
+		}
 	}
 }
 
@@ -178,4 +205,20 @@ if(!$_G['privacy']) {
 		include_once template("home/space_card");
 	}
 }
+
+function show_credit() {
+	global $_G, $space;
+
+	$showinfo = C::t('home_show')->fetch($space['uid']);
+	if($showinfo['credit'] > 0) {
+		$showinfo['unitprice'] = intval($showinfo['unitprice']);
+		if($showinfo['credit'] <= $showinfo['unitprice']) {
+			notification_add($space['uid'], 'show', 'show_out');
+			C::t('home_show')->delete($space['uid']);
+		} else {
+			C::t('home_show')->update_credit_by_uid($space['uid'], -$showinfo['unitprice']);
+		}
+	}
+}
+
 ?>

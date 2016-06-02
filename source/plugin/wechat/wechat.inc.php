@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: wechat.inc.php 35959 2016-05-24 02:35:40Z nemohou $
+ *      $Id: wechat.inc.php 35228 2015-03-05 06:53:53Z nemohou $
  */
 if (!defined('IN_DISCUZ')) {
 	exit('Access Denied');

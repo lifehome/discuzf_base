@@ -34,8 +34,10 @@ if($_GET['op'] == 'delete') {
 				$favoriteService = Cloud::loadClass('Service_Client_Favorite');
 				$favoriteService->remove($_G['uid'], $_GET['favorite'], TIMESTAMP);
 			}
+			showmessage('favorite_delete_succeed', 'home.php?mod=space&uid='.$_G['uid'].'&do=favorite&view=me&type='.$_GET['type'].'&quickforward=1');
+		}else{
+			showmessage('admin_nonexistence', '');
 		}
-		showmessage('favorite_delete_succeed', 'home.php?mod=space&uid='.$_G['uid'].'&do=favorite&view=me&type='.$_GET['type'].'&quickforward=1');
 	} else {
 		$favid = intval($_GET['favid']);
 		$thevalue = C::t('home_favorite')->fetch($favid);

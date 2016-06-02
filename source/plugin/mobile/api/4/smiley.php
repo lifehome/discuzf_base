@@ -7,6 +7,7 @@
  *      $Id: smiley.php 34398 2014-04-14 07:11:22Z nemohou $
  */
 
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

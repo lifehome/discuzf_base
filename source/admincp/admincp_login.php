@@ -51,7 +51,7 @@ function html_login_header($form = true) {
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=$charset" />
 <title>$title</title>
-<link rel="stylesheet" href="static/image/admincp/admincp.css" type="text/css" media="all" />
+<link rel="stylesheet" href="static/image/admincp/admincp.css?{$_G[style][verhash]}" type="text/css" media="all" />
 <meta content="Comsenz Inc." name="Copyright" />
 </head>
 <body>
@@ -88,7 +88,7 @@ function html_login_footer($halt = true) {
 	<td colspan="2" class="footer">
 		<div class="copyright">
 			<p>Powered by <a href="http://www.discuz.net/" target="_blank">Discuz!</a> $version </p>
-			<p>&copy; 2001-2013, <a href="http://www.comsenz.com/" target="_blank">Comsenz</a> Inc.</p>
+			<p>&copy; 2001-2016, <a href="http://www.comsenz.com/" target="_blank">Comsenz Inc.</a> & <a href="http://www.discuzf.com" target="_blank">Discuz! Fans</a></p>
 		</div>
 	</td>
 </tr>

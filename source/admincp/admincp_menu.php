@@ -65,7 +65,6 @@ $menu['style'] = array(
 	array('menu_setting_customnav', 'nav'),
 	array('menu_setting_styles', 'setting_styles'),
 	array('menu_styles', 'styles'),
-	$isfounder ? array('menu_styles_templates', 'templates') : null,
 	array('menu_posting_smilies', 'smilies'),
 	array('menu_click', 'click'),
 	array('menu_thread_stamp', 'misc_stamp'),
@@ -213,6 +212,8 @@ if($isfounder) {
 	$menu['plugin'] = array(
 		array('menu_addons', 'cloudaddons'),
 		array('menu_plugins', 'plugins'),
+		array('menu_styles', 'styles'),
+		array('menu_packs', 'packs'),
 	);
 }
 loadcache('adminmenu');
@@ -244,14 +245,15 @@ if($isfounder) {
 	$menu['founder'] = array(
 		array('menu_founder_perm', 'founder_perm'),
 		array('menu_setting_mail', 'setting_mail'),
-		array('menu_patch', 'patch'),
+		array('menu_setting_sms', 'setting_sms'),
 		array('menu_setting_uc', 'setting_uc'),
 		array('menu_db', 'db_export'),
 		array('menu_membersplit', 'membersplit_check'),
 		array('menu_postsplit', 'postsplit_manage'),
 		array('menu_threadsplit', 'threadsplit_manage'),
-		array('menu_upgrade', 'upgrade'),
+	    array('menu_upgrade', 'upgrade'),
 		array('menu_optimizer', 'optimizer_performance'),
+		array('menu_fanscenter', 'fanscenter_getinfo'),
 	);
 
 	$menu['uc'] = array();
@@ -278,5 +280,3 @@ if(!isfounder() && !isset($GLOBALS['admincp']->perms['all'])) {
 	}
 	$menu = $menunew;
 }
-
-?>

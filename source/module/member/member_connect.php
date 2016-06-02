@@ -72,7 +72,7 @@ if($_GET['action'] == 'login') { // debug 已有賬號，綁定我的賬號走�
 	$_G['setting']['seccodestatus'] = 0;
 	$_G['setting']['secqaa']['status'] = 0;
 
-	$ctl_obj->setting['sendregisterurl'] = false;
+	$ctl_obj->setting['sendregisterverify'] = 0;
 
 	$ctl_obj->connect_guest = $connect_guest;
 

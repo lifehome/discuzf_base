@@ -18,9 +18,9 @@ $checklpp = array();
 $checklpp[$lpp] = 'selected="selected"';
 $extrainput = '';
 
-$operation = in_array($operation, array('illegal', 'rate', 'credit', 'mods', 'medal', 'ban', 'cp', 'magic', 'error', 'invite', 'payment', 'warn', 'crime', 'sendmail')) ? $operation : 'illegal';
+$operation = in_array($operation, array('illegal', 'rate', 'credit', 'mods', 'medal', 'ban', 'cp', 'magic', 'error', 'invite', 'payment', 'warn', 'crime', 'sendmail', 'sendsms')) ? $operation : 'illegal';
 $logdir = DISCUZ_ROOT.'./data/log/';
-$logfiles = get_log_files($logdir, $operation.($operation == 'sendmail' ? '' : 'log'));
+$logfiles = get_log_files($logdir, $operation.($operation == 'sendmail' || $operation == 'sendsms' ? '' : 'log'));
 $logs = array();
 $lastkey = count($logfiles) - 1;
 $lastlog = $logfiles[$lastkey];
@@ -28,9 +28,9 @@ krsort($logfiles);
 if($logfiles) {
 	if(!isset($_GET['day']) || strexists($_GET['day'], '_')) {
 		list($_GET['day'], $_GET['num']) = explode('_', $_GET['day']);
-		$logs = file(($_GET['day'] ? $logdir.$_GET['day'].'_'.$operation.($operation == 'sendmail' ? '' : 'log').($_GET['num'] ? '_'.$_GET['num'] : '').'.php' : $logdir.$lastlog));
+		$logs = file(($_GET['day'] ? $logdir.$_GET['day'].'_'.$operation.($operation == 'sendmail' || $operation == 'sendsms' ? '' : 'log').($_GET['num'] ? '_'.$_GET['num'] : '').'.php' : $logdir.$lastlog));
 	} else {
-		$logs = file($logdir.$_GET['day'].'_'.$operation.($operation == 'sendmail' ? '' : 'log').'.php');
+		$logs = file($logdir.$_GET['day'].'_'.$operation.($operation == 'sendmail' || $operation == 'sendsms' ? '' : 'log').'.php');
 	}
 }
 
@@ -94,6 +94,7 @@ showsubmenu('nav_logs', array(
 		array('nav_logs_cp', 'logs&operation=cp'),
 		array('nav_logs_error', 'logs&operation=error'),
 		array('nav_logs_sendmail', 'logs&operation=sendmail'),
+		array('nav_logs_sendsms', 'logs&operation=sendsms'),
 	)), '', in_array($operation, array('cp', 'error'))),
 	array(array('menu' => 'nav_logs_extended', 'submenu' => array(
 		array('nav_logs_rate', 'logs&operation=rate'),
@@ -181,6 +182,42 @@ if($operation == 'illegal') {
 	}
 
 	$members = C::t('common_member')->fetch_all_by_email($logemail);
+
+	foreach($logarr as $log) {
+		$log[6] = $members[$log[5]]['username'];
+		if(strtolower($log[6]) == strtolower($_G['member']['username'])) {
+			$log[6] = "<b>$log[6]</b>";
+		}
+		showtablerow('', array('class="smallefont"', 'class="bold"', 'class="smallefont"'), array(
+			$log[1],
+			'<a href="home.php?mod=space&username='.$log[6].'" target="_blank">'.$log[6].'</a>',
+			$log[5]
+		));
+	}
+
+} elseif($operation == 'sendsms') {
+
+	showtablerow('class="header"', array('class="td23"','class="td23"','class="td23"'), array(
+		cplang('time'),
+		cplang('username'),
+		cplang('sms'),
+	));
+
+	$logarr = $logsms = array();
+	foreach($logs as $logrow) {
+		$log = explode("\t", $logrow);
+		if(empty($log[1])) {
+			continue;
+		}
+		$log[5] = trim(str_replace('sendsms failed.', '', $log[5]));
+		if(!$log[5]) {
+			continue;
+		}
+		$logsms[] = $log[5];
+		$logarr[] = $log;
+	}
+
+	$members = C::t('common_member')->fetch_all_by_sms($logsms);
 
 	foreach($logarr as $log) {
 		$log[6] = $members[$log[5]]['username'];

@@ -118,6 +118,25 @@
 						</ul>
 					</div>
 				<!--{/if}-->
+
+				<!--{if $smslist}-->
+					<div class="tbmu">
+						<h2 class="mbm">{lang no_invite_friend_sms}</h2>
+						<ul class="xl xl1">
+							<!--{loop $smslist $key $value}-->
+							<li id="sendsms_$value[id]_li">
+								<em>
+									<a href="home.php?mod=spacecp&ac=invite&op=resend&id=$value[id]&handlekey=resendinvitehk_{$value[id]}" id="sms_invite_$value[id]" onclick="showWindow(this.id, this.href, 'get', 0);" title="{lang resend}">{lang resend}</a>
+									<a href="javascript:;" title="{lang link}" onclick="setCopy('$value[url]', '{lang copy_invite_link}');return false;">{lang link}</a>
+									<a href="home.php?mod=spacecp&ac=invite&op=delete&id=$value[id]&handlekey=deleteinvitehk_{$value[id]}" id="del_invite_$value[id]" onclick="showWindow(this.id, this.href, 'get', 0);" title="{lang delete}">{lang delete}</a>
+								</em>
+								$value[sms]
+							</li>
+							<!--{/loop}-->
+						</ul>
+					</div>
+				<!--{/if}-->
+				
 				<table cellspacing="0" cellpadding="0" width="100%" class="tfm mbm">
 					<caption class="cl">
 					<!--{if $appid}-->
@@ -184,12 +203,41 @@
 				<input type="hidden" name="invitesubmit" value="true" />
 				<input type="hidden" name="formhash" value="{FORMHASH}" />
 			</form>
+			
+			<!--{if $_G['group']['allowsmsinvite'] || $_G['group']['allowmailinvite']}-->
+			<script type="text/javascript" src="http://widgets.manyou.com/misc/scripts/ab.js" charset="utf-8"></script>
+			<!--{/if}-->
+			
+			<!--{if $_G['group']['allowsmsinvite']}-->
+			<form method="post" autocomplete="off" action="home.php?mod=spacecp&ac=invite&type=sms&appid=$appid&ref">
+				<input type="hidden" name="formhash" value="{FORMHASH}" />
+				<h2 class="xs2">{lang send_invitation_sms}<!--{if $appid}-->{lang friend_play_together}$appinfo[appname]<!--{/if}--></h2>
+				<div class="mtn bm bmn">
+					<table cellspacing="0" cellpadding="0" class="tfm mbm">
+						<caption>
+							<p>{lang send_invitation_sms_message}</p>
+						</caption>
+						<tr>
+							<td>
+								<p class="d">
+									{lang friend_sms_address}
+								</p>
+								<textarea name="sms" id="sms" rows="3" class="pt" style="width:99%;"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td><button type="submit" name="smsinvite" value="true" class="pn pnc"><strong>{lang invite}</strong></button></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+			<!--{/if}-->
+			
 			<!--{if $_G['group']['allowmailinvite']}-->
 			<form method="post" autocomplete="off" action="home.php?mod=spacecp&ac=invite&type=mail&appid=$appid&ref">
 				<input type="hidden" name="formhash" value="{FORMHASH}" />
 				<h2 class="xs2">{lang send_invitation_email}<!--{if $appid}-->{lang friend_play_together}$appinfo[appname]<!--{/if}--></h2>
 				<div class="mtn bm bmn">
-					<script type="text/javascript" src="http://widgets.manyou.com/misc/scripts/ab.js" charset="utf-8"></script>
 					<table cellspacing="0" cellpadding="0" class="tfm mbm">
 						<caption>
 							<p>{lang send_invitation_email_message}</p>

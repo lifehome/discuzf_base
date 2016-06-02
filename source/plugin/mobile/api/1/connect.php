@@ -7,6 +7,7 @@
  *      $Id: connect.php 34240 2013-11-21 08:32:04Z nemohou $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

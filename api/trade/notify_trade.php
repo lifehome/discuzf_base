@@ -16,8 +16,11 @@ require '../../source/function/function_forum.php';
 
 $discuz = C::app();
 $discuz->init();
-
-$apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+if(preg_match('/<appid><\!\[CDATA\[wx\w+\]\]><\/appid>/isU', file_get_contents("php://input"))){
+    $apitype = 'wxpay';
+}else{
+    $apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+}
 require_once DISCUZ_ROOT.'./api/trade/api_' . $apitype . '.php';
 
 $PHP_SELF = $_SERVER['PHP_SELF'];
@@ -33,7 +36,7 @@ if($notifydata['validator']) {
 
 		$tradelog = C::t('forum_tradelog')->fetch($orderid);
 
-		if($tradelog && $tradelog['status'] != STATUS_TRADE_SUCCESS && $tradelog['status'] != STATUS_REFUND_CLOSE && ($apitype == 'tenpay' || $tradelog['selleraccount'] == $_REQUEST['seller_email'])) {
+		if($tradelog && $tradelog['status'] != STATUS_TRADE_SUCCESS && $tradelog['status'] != STATUS_REFUND_CLOSE && ($apitype == 'tenpay' || strtolower($_G['setting']['ec_wxpay_appid']) == strtolower($notifydata['appid']) || $tradelog['selleraccount'] == $_REQUEST['seller_email'])) {
 			$status = $notifydata['status'];
 			C::t('forum_tradelog')->update($orderid, array(
 				'status' => $status,

@@ -4,7 +4,7 @@
 	[UCenter] (C)2001-2099 Comsenz Inc.
 	This is NOT a freeware, use is subject to license terms
 
-	$Id: setting.php 1174 2014-11-03 04:38:12Z hypowang $
+	$Id: setting.php 1173 2014-11-03 04:37:31Z hypowang $
 */
 
 !defined('IN_UC') && exit('Access Denied');
@@ -15,7 +15,9 @@ class control extends adminbase {
 		'dateformat', 'timeoffset', 'timeformat', 'extra', 'maildefault', 'mailsend', 'mailserver',
 		'mailport', 'mailauth', 'mailfrom', 'mailauth_username', 'mailauth_password', 'maildelimiter',
 		'mailusername', 'mailsilent', 'pmcenter', 'privatepmthreadlimit', 'chatpmthreadlimit',
-		'chatpmmemberlimit', 'pmfloodctrl', 'sendpmseccode', 'pmsendregdays', 'login_failedtime');
+		'chatpmmemberlimit', 'pmfloodctrl', 'sendpmseccode', 'pmsendregdays', 'login_failedtime',
+	    'smstype', 'smsauth_username', 'smsauth_passwd', 'smssilent', 'smstemplate'
+	);
 
 	function __construct() {
 		$this->control();
@@ -148,7 +150,35 @@ class control extends adminbase {
 		foreach($items as $item) {
 			$this->view->assign($item, dhtmlspecialchars($settings[$item]));
 		}
+		$this->view->assign('a', getgpc('a'));
+		$this->view->assign('updated', $updated);
+		$this->view->display('admin_setting');
+	}
 
+	function onsms() {
+		$items = array('smstype', 'smsauth_username', 'smsauth_passwd', 'smssilent', 'smstemplate');
+		if($this->submitcheck()) {
+			foreach($items as $item) {
+				$value = getgpc($item, 'P');
+				$this->set_setting($item, $value);
+			}
+			$updated = true;
+			$this->writelog('setting_sms_update');
+			$this->updatecache();
+		}
+
+		$settings = $this->get_setting($this->_setting_items);
+		if($updated) {
+			$this->_add_note_for_setting($settings);
+		}
+		foreach($items as $item) {
+			if($item == 'smstemplate'){
+			    $this->view->assign($item, dhtmlspecialchars(unserialize($settings[$item])));
+			}else{
+			    $this->view->assign($item, dhtmlspecialchars($settings[$item]));
+			}
+		}
+		$this->view->assign('a', getgpc('a'));
 		$this->view->assign('updated', $updated);
 		$this->view->display('admin_setting');
 	}

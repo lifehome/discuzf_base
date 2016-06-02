@@ -19,7 +19,7 @@ function build_cache_setting() {
 		'postno', 'postnocustom', 'customauthorinfo', 'domainwhitelist', 'ipregctrl',
 		'ipverifywhite', 'fastsmiley', 'defaultdoing', 'antitheftsetting',
 		);
-	$serialized = array('reginput', 'memory', 'search', 'creditspolicy', 'ftp', 'secqaa', 'ec_credit', 'qihoo', 'spacedata',
+	$serialized = array('reginput', 'memory', 'search', 'creditspolicy', 'ftp', 'secqaa', 'ec_credit'/*, 'qihoo'*/, 'spacedata',
 		'infosidestatus', 'uc', 'indexhot', 'relatedtag', 'sitemessage', 'uchome', 'heatthread', 'recommendthread',
 		'disallowfloat', 'allowviewuserthread', 'advtype', 'click', 'card', 'rewritestatus', 'rewriterule', 'privacy', 'focus',
 		'forumkeys', 'article_tags', 'verify', 'seotitle', 'seodescription', 'seokeywords', 'domain', 'ranklist', 'my_search_data',
@@ -271,8 +271,8 @@ function build_cache_setting() {
 			} else {
 				$data['watermarktext']['fontpath'][$k] = 'static/image/seccode/font/'.$data['watermarktext']['fontpath'][$k];
 			}
-			$data['watermarktext']['color'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['color'][$k]);
-			$data['watermarktext']['shadowcolor'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['shadowcolor'][$k]);
+			$data['watermarktext']['color'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', 'build_cache_setting_callback_hexdec_123a', $data['watermarktext']['color'][$k]);
+			$data['watermarktext']['shadowcolor'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', 'build_cache_setting_callback_hexdec_123a', $data['watermarktext']['shadowcolor'][$k]);
 		} else {
 			$data['watermarktext']['text'][$k] = '';
 			$data['watermarktext']['fontpath'][$k] = '';
@@ -384,9 +384,8 @@ function build_cache_setting() {
 	$data['homeshow'] = $data['uchomeurl'] && $data['uchome']['homeshow'] ? $data['uchome']['homeshow'] : '0';
 
 	unset($data['allowthreadplugin']);
-	if($data['jspath'] == 'data/cache/') {
-		writetojscache();
-	} elseif(!$data['jspath']) {
+	writetojscache();
+	if(!$data['jspath']) {
 		$data['jspath'] = 'static/js/';
 	}
 
@@ -401,7 +400,7 @@ function build_cache_setting() {
 		@unlink($cachedir.'/'.$tidmd5[0].'/'.$tidmd5[1].'/'.$tidmd5[2].'/0.htm');
 	}
 
-	$reginputbwords = array('username', 'password', 'password2', 'email');
+	$reginputbwords = array('username', 'password', 'password2', 'email', 'sms', 'smscode');
 	if(in_array($data['reginput']['username'], $reginputbwords) || !preg_match('/^[A-z]\w+?$/', $data['reginput']['username'])) {
 		$data['reginput']['username'] = random(6);
 	}
@@ -413,6 +412,12 @@ function build_cache_setting() {
 	}
 	if(in_array($data['reginput']['email'], $reginputbwords) || !preg_match('/^[A-z]\w+?$/', $data['reginput']['email'])) {
 		$data['reginput']['email'] = random(6);
+	}
+	if(in_array($data['reginput']['sms'], $reginputbwords) || !preg_match('/^[A-z]\w+?$/', $data['reginput']['sms'])) {
+		$data['reginput']['sms'] = random(6);
+	}
+	if(in_array($data['reginput']['smscode'], $reginputbwords) || !preg_match('/^[A-z]\w+?$/', $data['reginput']['smscode'])) {
+	    $data['reginput']['smscode'] = random(6);
 	}
 
 	$defaultcurhost = empty($_G['setting']['domain']['app']['default']) ? '{CURHOST}' : $_G['setting']['domain']['app']['default'];
@@ -448,19 +453,29 @@ function build_cache_setting() {
 		}
 		if($output['preg']) {
 			foreach($data['footernavs'] as $id => $nav) {
-				$data['footernavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['footernavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['spacenavs'] as $id => $nav) {
-				$data['spacenavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['spacenavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['mynavs'] as $id => $nav) {
-				$data['mynavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['mynavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['topnavs'] as $id => $nav) {
-				$data['topnavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['topnavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['plugins']['jsmenu'] as $key => $nav) {
-				$data['plugins']['jsmenu'][$key]['url'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['url']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['plugins']['jsmenu'][$key]['url'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['url']);
+				}
 			}
 		}
 	}
@@ -469,6 +484,10 @@ function build_cache_setting() {
 
 	savecache('setting', $data);
 	$_G['setting'] = $data;
+}
+
+function build_cache_setting_callback_hexdec_123a($matches) {
+	return hexdec($matches[1]).','.hexdec($matches[2]).','.hexdec($matches[3]);
 }
 
 function get_cachedata_setting_creditspolicy() {
@@ -487,10 +506,13 @@ function get_cachedata_setting_creditspolicy() {
 
 function get_cachedata_setting_plugin($method = '') {
 	global $_G;
-	$hookfuncs = array('common', 'discuzcode', 'deletemember', 'deletethread', 'deletepost', 'avatar', 'savebanlog', 'cacheuserstats', 'undeletethreads', 'recyclebinpostundelete', 'threadpubsave', 'profile_node');
-	$data = $adminmenu = array();
+	$hookfuncs = array('common', 'discuzcode', 'template', 'deletemember', 'deletethread', 'deletepost', 'avatar', 'savebanlog', 'cacheuserstats', 'undeletethreads', 'recyclebinpostundelete', 'threadpubsave', 'profile_node');
+	$data = $adminmenu = $cats = array();
 	$data['plugins'] = $data['pluginlinks'] = $data['hookscript'] = $data['hookscriptmobile'] = $data['threadplugins'] = $data['specialicon'] = array();
 	$data['plugins']['func'] = $data['plugins']['available'] = array();
+	if(DB::fetch_first("SHOW TABLES LIKE '".DB::table('common_plugincat')."'")) {
+		$cats = C::t('common_plugincat')->fetch_all_cat();
+	}
 	foreach(C::t('common_plugin')->fetch_all_data() as $plugin) {
 		$available = !$method && $plugin['available'] || $method && ($plugin['available'] || $method == $plugin['identifier']);
 		$addadminmenu = $plugin['available'] && C::t('common_pluginvar')->count_by_pluginid($plugin['pluginid']) ? TRUE : FALSE;
@@ -589,7 +611,9 @@ function get_cachedata_setting_plugin($method = '') {
 											$data['plugins']['profile_node'][$plugin['identifier']] = $script;
 										}
 									}
+									$funcname = str_replace('__', '#', $funcname);
 									$v = explode('_', $funcname);
+									$v[0] = str_replace('#', '_', $v[0]);
 									$curscript = $v[0];
 									if(!$curscript || $classname == $funcname) {
 										continue;
@@ -631,7 +655,15 @@ function get_cachedata_setting_plugin($method = '') {
 			}
 		}
 		if($addadminmenu) {
-			$adminmenu[$plugin['modules']['system'] ? 0 : 1][] = array('url' => "plugins&operation=config&do=$plugin[pluginid]", 'action' => 'plugins_config_'.$plugin['pluginid'], 'name' => $plugin['name']);
+			if($plugin['modules']['system']){
+				$adminmenu[0][] = array('url' => "plugins&operation=config&do=$plugin[pluginid]", 'action' => 'plugins_config_'.$plugin['pluginid'], 'name' => $plugin['name']);
+			}else{
+				if($plugin['catid']){
+					$adminmenu[$plugin['catid']][] = array('url' => "plugins&operation=config&do=$plugin[pluginid]", 'action' => 'plugins_config_'.$plugin['pluginid'], 'name' => $plugin['name']);
+				}else{
+					$adminmenu['default'][] = array('url' => "plugins&operation=config&do=$plugin[pluginid]", 'action' => 'plugins_config_'.$plugin['pluginid'], 'name' => $plugin['name']);
+				}
+			}
 		}
 	}
 	if(!$method) {
@@ -643,7 +675,16 @@ function get_cachedata_setting_plugin($method = '') {
 				array(array('name' => 'plugins_system', 'sub' => 2))
 			);
 		}
-		savecache('adminmenu', array_merge((array)$adminmenu[0], (array)$adminmenu[1]));
+
+		foreach($cats as $cat){
+			$adminmenu[$cat['catid']] = array_merge(
+				array(array('name' => $cat['catname'], 'sub' => 1)),
+				$adminmenu[$cat['catid']],
+				array(array('name' => $cat['catname'], 'sub' => 2))
+			);
+			$adminmenu[0] = array_merge((array)$adminmenu[0], (array)$adminmenu[$cat['catid']]);
+		}
+		savecache('adminmenu', array_merge((array)$adminmenu[0], (array)$adminmenu['default']));
 	}
 
 
@@ -993,7 +1034,7 @@ function get_cachedata_threadprofile() {
 	}
 	foreach($data['template'] as $id => $template) {
 		foreach($template as $type => $row) {
-			$data['template'][$id][$type] = preg_replace('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/es', "get_cachedata_threadprofile_nodeparse(\$id, \$type, '\\1', '\\5', '\\6', '\\3')", $template[$type]);
+			$data['template'][$id][$type] = preg_replace_callback('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/s', create_function('$matches', 'return get_cachedata_threadprofile_nodeparse('.intval($id).', \''.addslashes($type).'\', $matches[1], $matches[5], $matches[6], $matches[3]);'), $template[$type]);
 		}
 	}
 	$data['code'] = $_G['cachedata_threadprofile_code'];

@@ -20,17 +20,17 @@ require './source/function/function_forum.php';
 
 $modarray = array('ajax','announcement','attachment','forumdisplay',
 	'group','image','index','medal','misc','modcp','notice','post','redirect',
-	'relatekw','relatethread','rss','topicadmin','trade','viewthread','tag','collection','guide'
+	'relatekw'/*,'relatethread'*/,'rss','topicadmin','trade','viewthread','tag','collection','guide'
 );
 
 $modcachelist = array(
 	'index'		=> array('announcements', 'onlinelist', 'forumlinks',
-			'heats', 'historyposts', 'onlinerecord', 'userstats', 'diytemplatenameforum'),
+			'heats', 'historyposts', 'onlinerecord', 'userstats'),
 	'forumdisplay'	=> array('smilies', 'announcements_forum', 'globalstick', 'forums',
-			'onlinelist', 'forumstick', 'threadtable_info', 'threadtableids', 'stamps', 'diytemplatenameforum'),
+			'onlinelist', 'forumstick', 'threadtable_info', 'threadtableids', 'stamps'),
 	'viewthread'	=> array('smilies', 'smileytypes', 'forums', 'usergroups',
 			'stamps', 'bbcodes', 'smilies',	'custominfo', 'groupicon', 'stamps',
-			'threadtableids', 'threadtable_info', 'posttable_info', 'diytemplatenameforum'),
+			'threadtableids', 'threadtable_info', 'posttable_info'),
 	'redirect'	=> array('threadtableids', 'threadtable_info', 'posttable_info'),
 	'post'		=> array('bbcodes_display', 'bbcodes', 'smileycodes', 'smilies', 'smileytypes',
 			'domainwhitelist', 'albumcategory'),

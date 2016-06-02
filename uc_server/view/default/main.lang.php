@@ -48,6 +48,7 @@ $lang = array(
 	'setting_register_update' => '更新註冊設置',
 	'pm_send' => '發送公共消息',
 	'pm_delete' => '刪除公共消息',
+    'pm_delete_done' => '此消息已經刪除',
 	'pm_clear' => '清理短消息',
 	'badword_add' => '添加詞語過濾',
 	'badword_delete' => '刪除詞語過濾',

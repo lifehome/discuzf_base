@@ -46,6 +46,12 @@ $mailvar = array(
 	'sitename' => $_G['setting']['sitename'],
 	'siteurl' => $siteurl
 );
+$smsvar = array(
+    'username' => $space['username'],
+    'sitename' => $_G['setting']['sitename'],
+    'bbname' => $_G['setting']['bbname'],
+    'siteurl' => $siteurl
+);
 
 $appinfo = array();
 if($appid) {
@@ -54,6 +60,7 @@ if($appid) {
 		$inviteapp = "&amp;app=$appid";
 		$mailvar['appid'] = $appid;
 		$mailvar['appname'] = $appinfo['appname'];
+		$smsvar['appname'] = $appinfo['appname'];
 	} else {
 		$appid = 0;
 	}
@@ -126,7 +133,66 @@ if(submitcheck('emailinvite')) {
 	}
 
 	showmessage('send_result_succeed',$baseurl);
+} else if(submitcheck('smsinvite')) {
 
+    if(!$_G['group']['allowsmsinvite']) {
+        showmessage('sms_invite_not_allow', $baseurl);
+    }
+
+    $_POST['sms'] = str_replace("\n", ',', $_POST['sms']);
+    $newsmses = array();
+    $smses = explode(",", $_POST['sms']);
+    foreach ($smses as $value) {
+        $value = trim($value);
+        if(issms($value)) {
+            $newsmses[] = $value;
+        }
+    }
+    $newsmses = array_unique($newsmses);
+    $invitenum = count($newsmses);
+
+    if($invitenum < 1) {
+        showmessage('sms_can_not_be_empty', $baseurl);
+    }
+
+    $msetarr = array();
+    if($creditnum) {
+        $allcredit = $invitenum * $creditnum;
+        if($space[$creditkey] < $allcredit) {
+            showmessage('sms_credit_inadequate', $baseurl);
+        }
+
+        foreach($newsmses as $value) {
+            $code = strtolower(random(6));
+            $setarr = array(
+                'uid' => $_G['uid'],
+                'code' => $code,
+                'sms' => daddslashes($value),
+                'type' => 2,
+                'appid' => $appid,
+                'inviteip' => $_G['clientip'],
+                'dateline' => $_G['timestamp'],
+                'status' => 3,
+                'endtime' => ($_G['group']['maxinviteday']?($_G['timestamp']+$_G['group']['maxinviteday']*24*3600):0)
+            );
+            $id = C::t('common_invite')->insert($setarr, true);
+
+            $smsvar['code'] = getinvitecode($id, $code, $appid);
+
+            createsms($value, $smsvar);
+        }
+
+        updatemembercount($_G['uid'], array($creditkey => "-$allcredit"));
+
+    } else {
+
+        $smsvar['code'] = getinvitecode(0, 0, $appid);;
+        foreach($newsmses as $value) {
+            createsms($value, $smsvar);
+        }
+    }
+
+    showmessage('send_result_succeed',$baseurl);
 } else if(submitcheck('invitesubmit')) {
 
 	$invitenum = intval($_POST['invitenum']);
@@ -179,12 +245,18 @@ if($_GET['op'] == 'resend') {
 		}
 
 		if($value = C::t('common_invite')->fetch_by_id_uid($id, $_G['uid'])) {
-			if($creditnum) {
-				$inviteurl = getinviteurl($value['id'], $value['code'], $value['appid']);
-			}
-			$mailvar['inviteurl'] = $inviteurl;
+		    if($value['email']){
+    			if($creditnum) {
+    				$inviteurl = getinviteurl($value['id'], $value['code'], $value['appid']);
+    			}
+    			$mailvar['inviteurl'] = $inviteurl;
 
-			createmail($value['email'], $mailvar);
+    			createmail($value['email'], $mailvar);
+		    }elseif($value['sms'] && $value['code']){
+		        $smsvar['code'] = $value['code'];
+
+		        createsms($value['sms'], $smsvar);
+		    }
 			showmessage('send_result_succeed', dreferer(), array('id' => $id), array('showdialog'=>1, 'showmsg' => true, 'closetime' => true));
 
 		} else {
@@ -233,11 +305,21 @@ if($_GET['op'] == 'resend') {
 			$inviteurl = getinviteurl($value['id'], $value['code'], $value['appid']);
 
 			if($value['type']) {
-				$maillist[] = array(
-					'email' => $value['email'],
-					'url' => $inviteurl,
-					'id' => $value['id']
-				);
+			    if($value['email']){
+			        $maillist[] = array(
+			            'email' => $value['email'],
+			            'url' => $inviteurl,
+			            'id' => $value['id']
+			        );
+			    }
+			    if($value['sms']){
+			        $smslist[] = array(
+			            'sms' => $value['sms'],
+			            'code' => $value['code'],
+			            'url' => $inviteurl,
+			            'id' => $value['id']
+			        );
+			    }
 			} else {
 				$list[$value[code]] = $inviteurl;
 				$count++;
@@ -274,6 +356,19 @@ function createmail($mail, $mailvar) {
 	}
 }
 
+function createsms($sms, $smsvar) {
+    global $_G, $space, $appinfo;
+
+    require_once libfile('function/sms');
+
+    $smsconfig = dunserialize($_G['setting']['sms']);
+    $template = $smsconfig['template']['send_invite'];
+
+    if(!sendsms($sms, $smsvar, $template)) {
+        runlog('sendsms', "$sms sendsms failed.");
+    }
+}
+
 function getinviteurl($inviteid, $invitecode, $appid) {
 	global $_G;
 
@@ -285,6 +380,16 @@ function getinviteurl($inviteid, $invitecode, $appid) {
 		$inviteurl = getsiteurl()."home.php?mod=invite&amp;u=$_G[uid]&amp;c=$invite_code{$inviteapp}";
 	}
 	return $inviteurl;
+}
+
+function getinvitecode($inviteid, $invitecode, $appid) {
+	global $_G;
+
+	if($inviteid && $invitecode) {
+	} else {
+		$invitecode = space_key($_G['uid'], $appid);
+	}
+	return $invitecode;
 }
 
 ?>

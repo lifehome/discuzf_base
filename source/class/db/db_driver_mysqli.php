@@ -97,6 +97,7 @@ class db_driver_mysqli
 	function table_name($tablename) {
 		if(!empty($this->map) && !empty($this->map[$tablename])) {
 			$id = $this->map[$tablename];
+			$this->tablepre =  $this->config['db'][$id]['tablepre'];
 			if(!$this->link[$id]) {
 				$this->connect($id);
 			}
@@ -112,7 +113,6 @@ class db_driver_mysqli
 	}
 
 	function fetch_array($query, $result_type = MYSQLI_ASSOC) {
-		if($result_type == 'MYSQL_ASSOC') $result_type = MYSQLI_ASSOC;
 		return $query ? $query->fetch_array($result_type) : null;
 	}
 

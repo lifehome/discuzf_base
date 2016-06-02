@@ -102,6 +102,7 @@ class db_driver_mysql
 	function table_name($tablename) {
 		if(!empty($this->map) && !empty($this->map[$tablename])) {
 			$id = $this->map[$tablename];
+			$this->tablepre =  $this->config['db'][$id]['tablepre'];
 			if(!$this->link[$id]) {
 				$this->connect($id);
 			}
@@ -117,7 +118,6 @@ class db_driver_mysql
 	}
 
 	function fetch_array($query, $result_type = MYSQL_ASSOC) {
-		if($result_type == 'MYSQL_ASSOC') $result_type = MYSQL_ASSOC;
 		return mysql_fetch_array($query, $result_type);
 	}
 

@@ -1,14 +1,16 @@
 <?php
 
 /*
-	[UCenter] (C)2001-2099 Comsenz Inc.
+	[UCenter] (C)2001-2009 Comsenz Inc.
 	This is NOT a freeware, use is subject to license terms
 
-	$Id: index.php 1139 2012-05-08 09:02:11Z liulanbo $
+	$Id: index.php 1015 2010-09-18 05:26:20Z cnteacher $
 */
 
 error_reporting(0);
-set_magic_quotes_runtime(0);
+if(PHP_VERSION < '5.3.0') {
+	set_magic_quotes_runtime(0);
+}
 
 $mtime = explode(' ', microtime());
 $starttime = $mtime[1] + $mtime[0];
@@ -49,7 +51,7 @@ if(file_exists(UC_ROOT.RELEASE_ROOT.'model/base.php')) {
 	require UC_ROOT.'model/base.php';
 }
 
-if(in_array($m, array('app', 'frame', 'user', 'pm', 'pm_client', 'tag', 'feed', 'friend', 'domain', 'credit', 'mail', 'version'))) {
+if(in_array($m, array('app', 'frame', 'user', 'pm', 'pm_client', 'tag', 'feed', 'friend', 'domain', 'credit', 'mail', 'sms', 'version'))) {
 
 	if(file_exists(UC_ROOT.RELEASE_ROOT."control/$m.php")) {
 		include UC_ROOT.RELEASE_ROOT."control/$m.php";

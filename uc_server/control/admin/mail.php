@@ -48,6 +48,8 @@ class control extends adminbase {
 
 	function onsend() {
 		$mailid = intval(getgpc('mailid'));
+		$appid = intval(getgpc('appid'));
+		$noteid = intval(getgpc('noteid'));
 		$result = $_ENV['mail']->send_by_id($mailid);
 		if($result) {
 			$this->writelog('mail_send', "appid=$appid&noteid=$noteid");

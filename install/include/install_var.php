@@ -18,7 +18,7 @@ define('INSTALL_LANG', 'TC_UTF8');
 define('CONFIG', './config/config_global.php');
 define('CONFIG_UC', './config/config_ucenter.php');
 
-$sqlfile = ROOT_PATH.((file_exists(ROOT_PATH.'./install/data/install_dev.sql')) ? './install/data/install_dev.sql' : './install/data/install.sql');
+$sqlfile = ROOT_PATH.'./install/data/install.sql';
 $lockfile = ROOT_PATH.'./data/install.lock';
 
 @include ROOT_PATH.CONFIG;
@@ -62,6 +62,7 @@ define('ENV_CHECK_ERROR', 31);
 define('UNDEFINE_FUNC', 32);
 define('MISSING_PARAMETER', 33);
 define('LOCK_FILE_NOT_TOUCH', 34);
+define('ADMIN_MOBILE_INVALID', 35);
 
 $func_items = array(function_exists('mysql_connect') ? 'mysql_connect' : 'mysqli_connect', 'gethostbyname', 'file_get_contents', 'xml_parser_create');
 
@@ -133,6 +134,7 @@ $form_db_init_items = array
 		'dbpw' => array('type' => 'text', 'required' => 0, 'reg' => '/^.*$/', 'value' => array('type' => 'var', 'var' => 'dbpw')),
 		'tablepre' => array('type' => 'text', 'required' => 0, 'reg' => '/^.*+/', 'value' => array('type' => 'var', 'var' => 'tablepre')),
 		'adminemail' => array('type' => 'text', 'required' => 1, 'reg' => '/@/', 'value' => array('type' => 'var', 'var' => 'adminemail')),
+		'adminsms' => array('type' => 'text', 'required' => 1, 'reg' => '/^1\d{10}$/', 'value' => array('type' => 'var', 'var' => 'adminsms')),
 	),
 	'admininfo' => array
 	(
@@ -140,6 +142,7 @@ $form_db_init_items = array
 		'password' => array('type' => 'password', 'required' => 1, 'reg' => '/^.*$/'),
 		'password2' => array('type' => 'password', 'required' => 1, 'reg' => '/^.*$/'),
 		'email' => array('type' => 'text', 'required' => 1, 'reg' => '/@/', 'value' => array('type' => 'var', 'var' => 'adminemail')),
+		'sms' => array('type' => 'text', 'required' => 1, 'reg' => '/^1\d{10}$/', 'value' => array('type' => 'var', 'var' => 'adminsms')),
 	)
 );
 
@@ -149,7 +152,7 @@ $serialize_sql_setting = array (
     1 =>
     array (
       'img' => '',
-      'title' => 'å¨æœ›',
+      'title' => 'ÍþÍû',
       'unit' => '',
       'ratio' => 0,
       'available' => '1',
@@ -160,7 +163,7 @@ $serialize_sql_setting = array (
     2 =>
     array (
       'img' => '',
-      'title' => 'é‡‘éŒ¢',
+      'title' => '½ðÇ®',
       'unit' => '',
       'ratio' => 0,
       'available' => '1',
@@ -171,7 +174,7 @@ $serialize_sql_setting = array (
     3 =>
     array (
       'img' => '',
-      'title' => 'è²¢ç»',
+      'title' => '¹±Ï×',
       'unit' => '',
       'ratio' => 0,
       'available' => '1',
@@ -237,16 +240,16 @@ $serialize_sql_setting = array (
   ),
   'postnocustom' =>
   array (
-    0 => 'æ¨“ä¸»',
-    1 => 'æ²™ç™¼',
-    2 => 'æ¿å‡³',
-    3 => 'åœ°æ¿',
+    0 => 'Â¥Ö÷',
+    1 => 'É³·¢',
+    2 => '°åµÊ',
+    3 => 'µØ°å',
   ),
   'recommendthread' =>
   array (
     'status' => '0',
-    'addtext' => 'æ”¯æŒ',
-    'subtracttext' => 'åå°',
+    'addtext' => 'Ö§³Ö',
+    'subtracttext' => '·´¶Ô',
     'defaultshow' => '1',
     'daycount' => '0',
     'ownthread' => '0',
@@ -254,34 +257,34 @@ $serialize_sql_setting = array (
   ),
   'seotitle' =>
   array (
-    'portal' => 'é–€æˆ¶',
-    'forum' => 'è«–å£‡',
-    'group' => 'ç¾¤çµ„',
-    'home' => 'å®¶åœ’',
-    'userapp' => 'æ‡‰ç”¨',
+    'portal' => 'ÃÅ»§',
+    'forum' => 'ÂÛÌ³',
+    'group' => 'Èº×é',
+    'home' => '¼ÒÔ°',
+    'userapp' => 'Ó¦ÓÃ',
   ),
   'activityfield' =>
   array (
-    'realname' => 'çœŸå¯¦å§“å',
-    'mobile' => 'æ‰‹æ©Ÿ',
-    'qq' => 'QQè™Ÿ',
+    'realname' => 'ÕæÊµÐÕÃû',
+    'mobile' => 'ÊÖ»ú',
+    'qq' => 'QQºÅ',
   ),
   'article_tags' =>
   array (
-    1 => 'åŽŸå‰µ',
-    2 => 'ç†±é»ž',
-    3 => 'çµ„åœ–',
-    4 => 'çˆ†æ–™',
-    5 => 'é ­æ¢',
-    6 => 'å¹»ç‡ˆ',
-    7 => 'æ»¾å‹•',
-    8 => 'æŽ¨è–¦',
+    1 => 'Ô­´´',
+    2 => 'ÈÈµã',
+    3 => '×éÍ¼',
+    4 => '±¬ÁÏ',
+    5 => 'Í·Ìõ',
+    6 => '»ÃµÆ',
+    7 => '¹ö¶¯',
+    8 => 'ÍÆ¼ö',
   ),
   'verify' =>
   array (
     6 =>
     array (
-      'title' => 'å¯¦åèªè­‰',
+      'title' => 'ÊµÃûÈÏÖ¤',
       'available' => '0',
       'showicon' => '0',
       'viewrealname' => '0',
@@ -314,7 +317,7 @@ $serialize_sql_setting = array (
     ),
     7 =>
     array (
-      'title' => 'è¦–é »èªè­‰',
+      'title' => 'ÊÓÆµÈÏÖ¤',
       'available' => '0',
       'showicon' => '0',
       'viewvideophoto' => '0',
@@ -323,7 +326,7 @@ $serialize_sql_setting = array (
   ),
   'focus' =>
   array (
-    'title' => 'ç«™é•·æŽ¨è–¦',
+    'title' => 'Õ¾³¤ÍÆ¼ö',
     'data' =>
     array (
     ),
@@ -335,7 +338,7 @@ $serialize_sql_setting = array (
     array (
       'available' => 1,
       'displayorder' => 0,
-      'title' => 'åŸºæœ¬è³‡æ–™',
+      'title' => '»ù±¾×ÊÁÏ',
       'field' =>
       array (
         'realname' => 'realname',
@@ -359,7 +362,7 @@ $serialize_sql_setting = array (
     ),
     'contact' =>
     array (
-      'title' => 'è¯ç¹«æ–¹å¼',
+      'title' => 'ÁªÏµ·½Ê½',
       'available' => '1',
       'displayorder' => '1',
       'field' =>
@@ -377,7 +380,7 @@ $serialize_sql_setting = array (
     array (
       'available' => 1,
       'displayorder' => 2,
-      'title' => 'æ•™è‚²æƒ…æ³',
+      'title' => '½ÌÓýÇé¿ö',
       'field' =>
       array (
         'graduateschool' => 'graduateschool',
@@ -388,7 +391,7 @@ $serialize_sql_setting = array (
     array (
       'available' => 1,
       'displayorder' => 3,
-      'title' => 'å·¥ä½œæƒ…æ³',
+      'title' => '¹¤×÷Çé¿ö',
       'field' =>
       array (
         'occupation' => 'occupation',
@@ -399,7 +402,7 @@ $serialize_sql_setting = array (
     ),
     'info' =>
     array (
-      'title' => 'å€‹äººä¿¡æ¯',
+      'title' => '¸öÈËÐÅÏ¢',
       'available' => '1',
       'displayorder' => '4',
       'field' =>

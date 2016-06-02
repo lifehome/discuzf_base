@@ -67,6 +67,11 @@ if(in_array('wechat', $_G['setting']['plugins']['available'])) {
 	$conisregister = $operation == 'password' && $wechatuser['isregister'];
 }
 
+if (in_array('qq', $_G['setting']['plugins']['available'])) {
+
+    $qquser = C::t('#qq#qq_member')->fetch($_G['uid']);
+    $conisregister = $operation == 'password' && $qquser['conisregister'];
+}
 if(submitcheck('profilesubmit')) {
 
 	require_once libfile('function/discuzcode');
@@ -301,9 +306,14 @@ if(submitcheck('profilesubmit')) {
 	$membersql = $memberfieldsql = $authstradd1 = $authstradd2 = $newpasswdadd = '';
 	$setarr = array();
 	$emailnew = dhtmlspecialchars($_GET['emailnew']);
+	$smsnew = dhtmlspecialchars($_GET['smsnew']);
 	$ignorepassword = 0;
 	if($_G['setting']['connect']['allow']) {
-		$connect = C::t('#qqconnect#common_member_connect')->fetch($_G['uid']);
+        if ($qquser['uid']) {
+            $connect = C::t('#qq#qq_member')->fetch($_G['uid']);
+        } else {
+            $connect = C::t('#qqconnect#common_member_connect')->fetch($_G['uid']);
+        }
 		if($connect['conisregister']) {
 			$_GET['oldpassword'] = '';
 			$ignorepassword = 1;
@@ -357,7 +367,33 @@ if(submitcheck('profilesubmit')) {
 		include_once libfile('function/member');
 		checkemail($emailnew);
 	}
-	$ucresult = uc_user_edit(addslashes($_G['username']), $_GET['oldpassword'], $_GET['newpassword'], '', $ignorepassword, $_GET['questionidnew'], $_GET['answernew']);
+	if($smsnew != $_G['member']['sms']) {
+		include_once libfile('function/member');
+		checksms($smsnew);
+	}
+
+	$newsms = getcookie('newsms');
+	if(!empty($newsms)) {
+	    $smsinfo = explode("\t", $newsms);
+	    $newsms = $smsinfo[0] == $_G['uid'] && issms($smsinfo[1]) ? $smsinfo[1] : '';
+	}
+	$smssave = '';
+	if(!empty($newsms) && !empty($_GET['smscode'])){
+	    if(check_smscode($_GET['smscode'], $newsms)){
+	        $_G['member']['sms'] = $smssave = $smsnew = $newsms;
+	        $setarr['sms'] = $newsms;
+	        $setarr['smsstatus'] = 1;
+	        if($_G['setting']['regverify'] == 1 && $space['groupid'] == 8) {
+	            $membergroup = C::t('common_usergroup')->fetch_by_credits($space['credits']);
+	            $setarr['groupid'] = $membergroup['groupid'];
+	        }
+	        updatecreditbyaction('realsms', $space['uid']);
+	        dsetcookie('newsms', "", -1);
+	    }else{
+	        showmessage('profile_smscode_notmatch', '', array(), array('return' => true));
+	    }
+	}
+	$ucresult = uc_user_edit(addslashes($_G['username']), $_GET['oldpassword'], $_GET['newpassword'], '', $smssave, $ignorepassword, $_GET['questionidnew'], $_GET['answernew']);
 	if($ucresult == -1) {
 		showmessage('profile_passwd_wrong', '', array(), array('return' => true));
 	} elseif($ucresult == -4) {
@@ -366,24 +402,60 @@ if(submitcheck('profilesubmit')) {
 		showmessage('profile_email_domain_illegal', '', array(), array('return' => true));
 	} elseif($ucresult == -6) {
 		showmessage('profile_email_duplicate', '', array(), array('return' => true));
+	} elseif($ucresult == -7) {
+		showmessage('profile_sms_illegal', '', array(), array('return' => true));
+	} elseif($ucresult == -8) {
+		showmessage('profile_sms_duplicate', '', array(), array('return' => true));
+	}
+
+	$loginData = C::t('common_member_login')->fetch($space['uid']);
+	$loginName = $loginData['loginname'];
+	$loginNameEnc = $loginName ? mb_substr($loginName, 0, 1, CHARSET).'******'.mb_substr($loginName, mb_strlen($loginName, CHARSET)-1, 1, CHARSET) : '';
+
+	if($_GET['loginname'] != $loginNameEnc) {
+		if($_GET['loginname']) {
+			if(strlen($_GET['loginname']) < 3) {
+				showmessage('profile_loginname_tooshort', '', array(), array('return' => true));
+			}
+			if(is_numeric($_GET['loginname'])) {
+				showmessage('profile_loginname_is_numeric', '', array(), array('return' => true));
+			}
+			if(C::t('common_member_login')->checkExists($_GET['loginname'], $space['uid']) || C::t('common_member')->fetch_by_username($_GET['loginname'], 1)) {
+				showmessage('profile_loginname_exists', '', array(), array('return' => true));
+			}
+			C::t('common_member_login')->insert(array('uid' => $space['uid'], 'loginname' => $_GET['loginname']), false, true);
+		} else {
+			C::t('common_member_login')->delete($space['uid']);
+		}
 	}
 
 	if(!empty($_GET['newpassword']) || $secquesnew) {
 		$setarr['password'] = md5(random(10));
 	}
-	if($_G['setting']['connect']['allow']) {
-		C::t('#qqconnect#common_member_connect')->update($_G['uid'], array('conisregister' => 0));
-	}
+	if ($qquser['uid']) {
+        if ($_G['setting']['connect']['allow']) {
+            C::t('#qqt#qq_member')->update($_G['uid'], array('conisregister' => 0));
+        }
+    } else {
+        if ($_G['setting']['connect']['allow']) {
+            C::t('#qqconnect#common_member_connect')->update($_G['uid'], array('conisregister' => 0));
+        }
+    }
 
 	if(in_array('mobile', $_G['setting']['plugins']['available']) && $wechatuser['isregister']) {
 		C::t('#wechat#common_member_wechat')->update($_G['uid'], array('isregister' => 0));
 	}
 
-	$authstr = false;
+	$authstr = 0;
 	if($emailnew != $_G['member']['email']) {
-		$authstr = true;
+		$authstr = 1;
 		emailcheck_send($space['uid'], $emailnew);
 		dsetcookie('newemail', "$space[uid]\t$emailnew\t$_G[timestamp]", 31536000);
+	}
+	if($smsnew != $_G['member']['sms']) {
+	    $authstr = 2;
+	    smscheck_send($space['uid'], $smsnew);
+	    dsetcookie('newsms', "$space[uid]\t$smsnew\t$_G[timestamp]", 31536000);
 	}
 	if($setarr) {
 		if($_G['member']['freeze'] == 1) {
@@ -395,8 +467,10 @@ if(submitcheck('profilesubmit')) {
 		C::t('common_member_validate')->update($_G['uid'], array('message' => dhtmlspecialchars($_G['gp_freezereson'])));
 	}
 
-	if($authstr) {
+	if($authstr == 1) {
 		showmessage('profile_email_verify', 'home.php?mod=spacecp&ac=profile&op=password');
+	} elseif ($authstr == 2) {
+		showmessage('profile_sms_verify', 'home.php?mod=spacecp&ac=profile&op=password');
 	} else {
 		showmessage('profile_succeed', 'home.php?mod=spacecp&ac=profile&op=password');
 	}
@@ -404,26 +478,45 @@ if(submitcheck('profilesubmit')) {
 
 if($operation == 'password') {
 
-	$resend = getcookie('resendemail');
-	$resend = empty($resend) ? true : (TIMESTAMP - $resend) > 300;
+	$resend1 = getcookie('resendemail');
+	$resend1 = empty($resend1) ? true : (TIMESTAMP - $resend1) > 300;
 	$newemail = getcookie('newemail');
 	$space['newemail'] = !$space['emailstatus'] ? $space['email'] : '';
 	if(!empty($newemail)) {
 		$mailinfo = explode("\t", $newemail);
 		$space['newemail'] = $mailinfo[0] == $_G['uid'] && isemail($mailinfo[1]) ? $mailinfo[1] : '';
 	}
+	$resend2 = getcookie('resendsms');
+	$resend2 = empty($resend2) ? true : (TIMESTAMP - $resend2) > 300;
+	$newsms = getcookie('newsms');
+	$space['newsms'] = !$space['smsstatus'] ? $space['sms'] : '';
+	if(!empty($newsms)) {
+		$smsinfo = explode("\t", $newsms);
+		$space['newsms'] = $smsinfo[0] == $_G['uid'] && issms($smsinfo[1]) ? $smsinfo[1] : '';
+	}
 
-	if($_GET['resend'] && $resend) {
+	if($_GET['resend'] && $resend1) {
 		$toemail = $space['newemail'] ? $space['newemail'] : $space['email'];
 		emailcheck_send($space['uid'], $toemail);
 		dsetcookie('newemail', "$space[uid]\t$toemail\t$_G[timestamp]", 31536000);
 		dsetcookie('resendemail', TIMESTAMP);
 		showmessage('send_activate_mail_succeed', "home.php?mod=spacecp&ac=profile&op=password");
-	} elseif ($_GET['resend']) {
+	} elseif($_GET['resend'] && $resend2) {
+		$tosms = $space['newsms'] ? $space['newsms'] : $space['sms'];
+		smscheck_send($space['uid'], $tosms);
+		dsetcookie('newsms', "$space[uid]\t$tosms\t$_G[timestamp]", 31536000);
+		dsetcookie('resendsms', TIMESTAMP);
+		showmessage('send_activate_sms_succeed', "home.php?mod=spacecp&ac=profile&op=password");
+	} elseif ($_GET['resend'] == 1) {
 		showmessage('send_activate_mail_error', "home.php?mod=spacecp&ac=profile&op=password");
+	} elseif ($_GET['resend'] == 2) {
+		showmessage('send_activate_sms_error', "home.php?mod=spacecp&ac=profile&op=password");
 	}
 	if(!empty($space['newemail'])) {
-		$acitvemessage = lang('spacecp', 'email_acitve_message', array('newemail' => $space['newemail'], 'imgdir' => $_G['style']['imgdir']));
+		$acitvemessage1 = lang('spacecp', 'email_acitve_message', array('newemail' => $space['newemail'], 'imgdir' => $_G['style']['imgdir']));
+	}
+	if(!empty($space['newsms'])) {
+		$acitvemessage2 = lang('spacecp', 'sms_acitve_message', array('newsms' => $space['newsms'], 'imgdir' => $_G['style']['imgdir']));
 	}
 	$actives = array('password' =>' class="a"');
 	$navtitle = lang('core', 'title_password_security');
@@ -432,6 +525,9 @@ if($operation == 'password') {
 		$space['freezereson'] = $fzvalidate['message'];
 	}
 
+	$loginData = C::t('common_member_login')->fetch($space['uid']);
+	$loginName = $loginData['loginname'];
+	$loginNameEnc = $loginName ? mb_substr($loginName, 0, 1, CHARSET).'******'.mb_substr($loginName, mb_strlen($loginName, CHARSET)-1, 1, CHARSET) : '';
 } else {
 
 	space_merge($space, 'field_home');

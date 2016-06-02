@@ -218,6 +218,13 @@ class base {
 		}
 	}
 
+	function init_sms() {
+		if($this->sms_exists() && !getgpc('inajax')) {
+			$this->load('sms');
+			$_ENV['sms']->send();
+		}
+	}
+
 	function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
 		return uc_authcode($string, $operation, $key, $expiry);
 	}
@@ -232,6 +239,15 @@ class base {
 	function mail_exists() {
 		$mailexists = $this->db->result_first("SELECT value FROM ".UC_DBTABLEPRE."vars WHERE name='mailexists'");
 		if(empty($mailexists)) {
+			return FALSE;
+		} else {
+			return TRUE;
+		}
+	}
+
+	function sms_exists() {
+		$smsexists = $this->db->result_first("SELECT value FROM ".UC_DBTABLEPRE."vars WHERE name='smsexists'");
+		if(empty($smsexists)) {
 			return FALSE;
 		} else {
 			return TRUE;

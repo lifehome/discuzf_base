@@ -36,7 +36,7 @@
 			<!--{if $view != 'index'}-->
 			<div id="pgt" class="bm bw0 pgs cl">
 				$multipage
-				<a onclick="showWindow('nav', this.href, 'get', 0)" href="forum.php?mod=misc&amp;action=nav"><img src="{IMGDIR}/pn_post.png" alt="{lang send_posts}" /></a>
+				<a onclick="showWindow('nav', this.href, 'get', 0)" href="forum.php?mod=misc&amp;action=nav" class="pn_post" title="{lang send_posts}"></a>
 			</div>
 			<!--{/if}-->
 			<ul id="thread_types" class="ttp bm cl">
@@ -69,7 +69,7 @@
 							 			<!--{if $key == 'hot'}--><span class="xi1">$thread['heats']{lang guide_attend}</span><!--{/if}-->
 							 			<!--{if $key == 'new'}-->$thread['lastpost']<!--{/if}-->
 						 			</em>
-						 			
+
 						 			<i>&middot; <a href="forum.php?mod=viewthread&tid=$thread[tid]&{if $_GET['archiveid']}archiveid={$_GET['archiveid']}&{/if}extra=$extra"$thread[highlight] target="_blank">$thread[subject]</a></i>&nbsp;<span class="xg1"><a href="forum.php?mod=forumdisplay&fid=$thread[fid]" target="_blank">$list['forumnames'][$thread[fid]]['name']</a></span>
 					 			</li>
 					 			<!--{/loop}-->
@@ -101,7 +101,7 @@
 								<td class="by">{lang forum_group}</td>
 								<td class="by">{lang author}</td>
 								<td class="num">{lang replies}</td>
-								<td class="by">{lang lastpost}</td>
+								<td class="by tar">{lang lastpost}</td>
 							</tr>
 							<!--{if $view == 'my'}-->
 							<tbody class="bw0_all" id="searchbody"{if !$searchbody} style="display: none"{/if}>

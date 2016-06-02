@@ -6,6 +6,7 @@
  *
  *      $Id: checkcookie.php 35044 2014-10-30 05:32:05Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

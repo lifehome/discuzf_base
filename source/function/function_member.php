@@ -18,8 +18,10 @@ function userlogin($username, $password, $questionid, $answer, $loginfield = 'us
 		$isuid = 1;
 	} elseif($loginfield == 'email') {
 		$isuid = 2;
-	} elseif($loginfield == 'auto') {
+	} elseif($loginfield == 'sms') {
 		$isuid = 3;
+	} elseif($loginfield == 'auto') {
+		$isuid = 4;
 	} else {
 		$isuid = 0;
 	}
@@ -27,22 +29,37 @@ function userlogin($username, $password, $questionid, $answer, $loginfield = 'us
 	if(!function_exists('uc_user_login')) {
 		loaducenter();
 	}
-	if($isuid == 3) {
-		if(!strcmp(dintval($username), $username) && getglobal('setting/uidlogin')) {
-			$return['ucresult'] = uc_user_login($username, $password, 1, 1, $questionid, $answer, $ip);
-		} elseif(isemail($username)) {
-			$return['ucresult'] = uc_user_login($username, $password, 2, 1, $questionid, $answer, $ip);
+
+	$uid_login = C::t('common_member_login')->getUid($username);
+	if(!$uid_login) {
+		if($isuid == 4) {
+			if(!strcmp(dintval($username), $username) && getglobal('setting/uidlogin')) {
+				$return['ucresult'] = uc_user_login($username, $password, 1, 1, $questionid, $answer, $ip);
+			} elseif(isemail($username)) {
+				$return['ucresult'] = uc_user_login($username, $password, 2, 1, $questionid, $answer, $ip);
+				$_GET['loginfield'] = 'email';
+			} elseif (issms($username)){
+			    $return['ucresult'] = uc_user_login($username, $password, 3, 1, $questionid, $answer, $ip);
+			    $_GET['loginfield'] = 'sms';
+			}
+			if($return['ucresult'][0] <= 0 && $return['ucresult'][0] != -3) {
+				$return['ucresult'] = uc_user_login(addslashes($username), $password, 0, 1, $questionid, $answer, $ip);
+			}
+		} else {
+			$return['ucresult'] = uc_user_login(addslashes($username), $password, $isuid, 1, $questionid, $answer, $ip);
 		}
-		if($return['ucresult'][0] <= 0 && $return['ucresult'][0] != -3) {
-			$return['ucresult'] = uc_user_login(addslashes($username), $password, 0, 1, $questionid, $answer, $ip);
-		}
+		$useloginName = false;
 	} else {
-		$return['ucresult'] = uc_user_login(addslashes($username), $password, $isuid, 1, $questionid, $answer, $ip);
+		$return['ucresult'] = uc_user_login($uid_login, $password, 1, 1, $questionid, $answer, $ip);
+		$useloginName = true;
 	}
 	$tmp = array();
 	$duplicate = '';
-	list($tmp['uid'], $tmp['username'], $tmp['password'], $tmp['email'], $duplicate) = $return['ucresult'];
+	list($tmp['uid'], $tmp['username'], $tmp['password'], $tmp['email'], $tmp['sms'], $duplicate) = $return['ucresult'];
 	$return['ucresult'] = $tmp;
+	if(!$useloginName && $return['ucresult']['uid'] > 0 && C::t('common_member_login')->fetch($return['ucresult']['uid'])) {
+		$return['ucresult'] = array();
+	}
 	if($duplicate && $return['ucresult']['uid'] > 0 || $return['ucresult']['uid'] <= 0) {
 		$return['status'] = 0;
 		return $return;
@@ -60,6 +77,9 @@ function userlogin($username, $password, $questionid, $answer, $loginfield = 'us
 	}
 	if($member['email'] != $return['ucresult']['email']) {
 		C::t('common_member')->update($return['ucresult']['uid'], array('email' => $return['ucresult']['email']));
+	}
+	if($member['sms'] != $return['ucresult']['sms']) {
+		C::t('common_member')->update($return['ucresult']['uid'], array('sms' => $return['ucresult']['sms']));
 	}
 
 	return $return;
@@ -307,6 +327,22 @@ function checkemail($email) {
 		showmessage('profile_email_domain_illegal', '', array(), array('handle' => false));
 	} elseif($ucresult == -6) {
 		showmessage('profile_email_duplicate', '', array(), array('handle' => false));
+	}
+}
+function checksms($sms) {
+	global $_G;
+
+	$sms = strtolower(trim($sms));
+	if(strlen($sms) > 11) {
+		showmessage('profile_sms_illegal', '', array(), array('handle' => false));
+	}
+	loaducenter();
+	$ucresult = uc_user_checksms($sms);
+
+	if($ucresult == -7) {
+		showmessage('profile_sms_illegal', '', array(), array('handle' => false));
+	} elseif($ucresult == -8) {
+		showmessage('profile_sms_duplicate', '', array(), array('handle' => false));
 	}
 }
 

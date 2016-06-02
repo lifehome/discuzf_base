@@ -35,8 +35,10 @@ if(!$operation) {
 					"<input type=\"text\" id=\"group_color_$group[groupid]_v\" class=\"left txt\" size=\"6\" name=\"groupnew[$group[groupid]][color]\" value=\"$group[color]\" onchange=\"updatecolorpreview('group_color_$group[groupid]')\"><input type=\"button\" id=\"group_color_$group[groupid]\"  class=\"colorwd\" onclick=\"group_color_$group[groupid]_frame.location='static/image/admincp/getcolor.htm?group_color_$group[groupid]|group_color_$group[groupid]_v';showMenu({'ctrlid':'group_color_$group[groupid]'})\" /><span id=\"group_color_$group[groupid]_menu\" style=\"display: none\"><iframe name=\"group_color_$group[groupid]_frame\" src=\"\" frameborder=\"0\" width=\"210\" height=\"148\" scrolling=\"no\"></iframe></span>",
 					"<input class=\"checkbox\" type=\"checkbox\" chkvalue=\"gmember\" value=\"$group[groupid]\" onclick=\"multiupdate(this)\" /><a href=\"".ADMINSCRIPT."?action=usergroups&operation=edit&id=$group[groupid]\" class=\"act\">$lang[edit]</a>".
 						"<a href=\"".ADMINSCRIPT."?action=usergroups&operation=copy&source=$group[groupid]\" title=\"$lang[usergroups_copy_comment]\" class=\"act\">$lang[usergroups_copy]</a>".
-						"<a href=\"".ADMINSCRIPT."?action=usergroups&operation=merge&source=$group[groupid]\" title=\"$lang[usergroups_merge_comment]\" class=\"act\">$lang[usergroups_merge_link]</a>"
+						"<a href=\"".ADMINSCRIPT."?action=usergroups&operation=merge&source=$group[groupid]\" title=\"$lang[usergroups_merge_comment]\" class=\"act\">$lang[usergroups_merge_link]</a>".
+                        "<a href=\"".ADMINSCRIPT."?action=usergroups&operation=viewsgroup&sgroupid=$group[groupid]\" onclick=\"ajaxget(this.href, 'sgroup_$group[groupid]', 'sgroup_$group[groupid]');doane(event);\" class=\"act\">$lang[view]</a> &nbsp;"
 				), TRUE);
+				$membergroup .= showtablerow('', array('colspan="8" id="sgroup_'.$group['groupid'].'" style="display: none"'), array(''), TRUE);
 			} elseif($group['type'] == 'system') {
 				$sysgroup .= showtablerow('', array('', 'class="td23 lightfont"', '', 'class="td28"'), array(
 					"<input type=\"text\" class=\"txt\" size=\"12\" name=\"group_title[$group[groupid]]\" value=\"$group[grouptitle]\">",
@@ -45,8 +47,10 @@ if(!$operation) {
 					"<input type=\"text\" class=\"txt\" size=\"2\"name=\"group_stars[$group[groupid]]\" value=\"$group[stars]\">",
 					"<input type=\"text\" id=\"group_color_$group[groupid]_v\" class=\"left txt\" size=\"6\"name=\"group_color[$group[groupid]]\" value=\"$group[color]\" onchange=\"updatecolorpreview('group_color_$group[groupid]')\"><input type=\"button\" id=\"group_color_$group[groupid]\"  class=\"colorwd\" onclick=\"group_color_$group[groupid]_frame.location='static/image/admincp/getcolor.htm?group_color_$group[groupid]|group_color_$group[groupid]_v';showMenu({'ctrlid':'group_color_$group[groupid]'})\" /><span id=\"group_color_$group[groupid]_menu\" style=\"display: none\"><iframe name=\"group_color_$group[groupid]_frame\" src=\"\" frameborder=\"0\" width=\"210\" height=\"148\" scrolling=\"no\"></iframe></span>",
 					"<input class=\"checkbox\" type=\"checkbox\" chkvalue=\"gsystem\" value=\"$group[groupid]\" onclick=\"multiupdate(this)\" /><a href=\"".ADMINSCRIPT."?action=usergroups&operation=edit&id=$group[groupid]\" class=\"act\">$lang[edit]</a>".
-						"<a href=\"".ADMINSCRIPT."?action=usergroups&operation=copy&source=$group[groupid]\" title=\"$lang[usergroups_copy_comment]\" class=\"act\">$lang[usergroups_copy]</a>"
+						"<a href=\"".ADMINSCRIPT."?action=usergroups&operation=copy&source=$group[groupid]\" title=\"$lang[usergroups_copy_comment]\" class=\"act\">$lang[usergroups_copy]</a>".
+                        "<a href=\"".ADMINSCRIPT."?action=usergroups&operation=viewsgroup&sgroupid=$group[groupid]\" onclick=\"ajaxget(this.href, 'sgroup_$group[groupid]', 'sgroup_$group[groupid]');doane(event);\" class=\"act\">$lang[view]</a> &nbsp;"
 				), TRUE);
+				$sysgroup .= showtablerow('', array('colspan="6" id="sgroup_'.$group['groupid'].'" style="display: none"'), array(''), TRUE);
 			} elseif($group['type'] == 'special' && $group['radminid'] == '0') {
 
 				$specialgroupoption .= "<option value=\"g{$group[groupid]}\">".addslashes($group['grouptitle'])."</option>";
@@ -391,9 +395,9 @@ EOT;
 } elseif($operation == 'viewsgroup') {
 
 	$sgroupid = $_GET['sgroupid'];
-	$num = C::t('common_member')->count_by_groupid($sgroupid);
+	$num = C::t('common_member')->count_by_groupid_or_extgroupid($sgroupid);
 	$sgroups = '';
-	foreach(C::t('common_member')->fetch_all_by_groupid($sgroupid, 0, 80) as $uid => $member) {
+	foreach(C::t('common_member')->fetch_all_by_groupid_or_extgroupid($sgroupid, 0, 80) as $uid => $member) {
 		$sgroups .= '<li><a href="home.php?mod=space&uid='.$uid.'" target="_blank">'.$member['username'].'</a></li>';
 	}
 	ajaxshowheader();
@@ -614,6 +618,7 @@ EOT;
 				array(0, $lang['usergroups_edit_basic_forcelogin_none']),
 				array(1, $lang['usergroups_edit_basic_forcelogin_qq']),
 				array(2, $lang['usergroups_edit_basic_forcelogin_mail']),
+				array(3, $lang['usergroups_edit_basic_forcelogin_sms']),
 			)), $group['forcelogin'], 'mradio');
 		}
 		showsetting('usergroups_edit_basic_disable_postctrl', 'disablepostctrlnew', $group['disablepostctrl'], 'radio');
@@ -725,7 +730,8 @@ EOT;
 		showtableheader();
 		showtitle('usergroups_edit_invite');
 		showsetting('usergroups_edit_invite_permission', 'allowinvitenew', $group['allowinvite'], 'radio');
-		showsetting('usergroups_edit_invite_send_permission', 'allowmailinvitenew', $group['allowmailinvite'], 'radio');
+		showsetting('usergroups_edit_invite_sendmail_permission', 'allowmailinvitenew', $group['allowmailinvite'], 'radio');
+		showsetting('usergroups_edit_invite_sendsms_permission', 'allowsmsinvitenew', $group['allowsmsinvite'], 'radio');
 		showsetting('usergroups_edit_invite_price', 'invitepricenew', $group['inviteprice'], 'text');
 		showsetting('usergroups_edit_invite_buynum', 'maxinvitenumnew', $group['maxinvitenum'], 'text');
 		showsetting('usergroups_edit_invite_maxinviteday', 'maxinvitedaynew', $group['maxinviteday'], 'text');
@@ -1012,6 +1018,7 @@ EOT;
 			'maxinviteday' => $maxinvitedaynew,
 			'allowinvite' => $_GET['allowinvitenew'],
 			'allowmailinvite' => $_GET['allowmailinvitenew'],
+			'allowsmsinvite' => $_GET['allowsmsinvitenew'],
 			'inviteprice' => $_GET['invitepricenew']
 		);
 		if(!$multiset) {

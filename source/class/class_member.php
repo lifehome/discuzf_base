@@ -108,7 +108,7 @@ class logging_ctl {
 					$init_arr = explode(',', $this->setting['initcredits']);
 					$groupid = $this->setting['regverify'] ? 8 : $this->setting['newusergroupid'];
 
-					C::t('common_member')->insert($uid, $result['ucresult']['username'], md5(random(10)), $result['ucresult']['email'], $_G['clientip'], $groupid, $init_arr);
+					C::t('common_member')->insert($uid, $result['ucresult']['username'], md5(random(10)), $result['ucresult']['email'], $result['ucresult']['sms'], $_G['clientip'], $groupid, $init_arr);
 					$result['member'] = getuserbyuid($uid);
 					$result['status'] = 1;
 				}
@@ -121,6 +121,17 @@ class logging_ctl {
 				}
 
 				setloginstatus($result['member'], $_GET['cookietime'] ? 2592000 : 0);
+
+				if($_G['setting']['ec_wxpay_appid'] && ($wxlogin_openid = getcookie('wxlogin_openid'))){
+				    if(!C::t('common_member_openid')->fetch_first_by_uid_type($_G['uid'], 'wx')) {
+				        C::t('common_member_openid')->insert(array('uid' => $_G['uid'], 'type'=>'wx', 'openid' => $wxlogin_openid, 'dateline' => TIMESTAMP), false, true);
+				    }else{
+				        C::t('common_member_openid')->update_by_uid_type($_G['uid'], 'wx', array('openid' => $wxlogin_openid, 'dateline' => TIMESTAMP));
+				    }
+				    dsetcookie('wxlogin_openid', '');
+				}
+
+
 				checkfollowfeed();
 				if($_G['group']['forcelogin']) {
 					if($_G['group']['forcelogin'] == 1) {
@@ -129,6 +140,9 @@ class logging_ctl {
 					} elseif($_G['group']['forcelogin'] == 2 && $_GET['loginfield'] != 'email') {
 						clearcookies();
 						showmessage('location_login_force_mail');
+					} elseif($_G['group']['forcelogin'] == 3 && $_GET['loginfield'] != 'sms') {
+						clearcookies();
+						showmessage('location_login_force_sms');
 					}
 				}
 
@@ -350,6 +364,7 @@ class register_ctl {
 		if(!function_exists('sendmail')) {
 			include libfile('function/mail');
 		}
+		include libfile('function/sms');
 		loaducenter();
 	}
 
@@ -360,6 +375,8 @@ class register_ctl {
 		$_GET['password'] = $_GET[''.$this->setting['reginput']['password']];
 		$_GET['password2'] = $_GET[''.$this->setting['reginput']['password2']];
 		$_GET['email'] = $_GET[''.$this->setting['reginput']['email']];
+		$_GET['sms'] = $_GET[''.$this->setting['reginput']['sms']];
+		$_GET['smscode'] = $_GET[''.$this->setting['reginput']['smscode']];
 
 		if($_G['uid']) {
 			$ucsynlogin = $this->setting['allowsynlogin'] ? uc_user_synlogin($_G['uid']) : '';
@@ -456,7 +473,7 @@ class register_ctl {
 		if(!$invitestatus) {
 			$invite = getinvite();
 		}
-		$sendurl = $this->setting['sendregisterurl'] ? true : false;
+		$sendurl = $this->setting['sendregisterverify'] == 1 ? true : false;
 		if($sendurl) {
 			if(!empty($_GET['hash'])) {
 				$_GET['hash'] = preg_replace("/[^\[A-Za-z0-9_\]%\s+-\/=]/", '', $_GET['hash']);
@@ -466,6 +483,7 @@ class register_ctl {
 				}
 			}
 		}
+		$sendsms = $this->setting['sendregisterverify'] == 2 ? true : false;
 		if(!submitcheck('regsubmit', 0, $seccodecheck, $secqaacheck)) {
 
 			if($_GET['action'] == 'activation') {
@@ -522,6 +540,10 @@ class register_ctl {
 
 		} else {
 
+			if(C::t('common_member_login')->getUid($username)) {
+				showmessage('profile_username_duplicate');
+			}
+
 			$activationauth = array();
 			if(isset($_GET['activationauth']) && $_GET['activationauth']) {
 				$activationauth = explode("\t", authcode($_GET['activationauth'], 'DECODE'));
@@ -547,13 +569,26 @@ class register_ctl {
 				showmessage('register_email_send_succeed', dreferer(), array('bbname' => $this->setting['bbname']), array('showdialog' => false, 'msgtype' => 3, 'closetime' => 10));
 			}
 			$emailstatus = 0;
-			if($this->setting['sendregisterurl'] && !$sendurl) {
+			if($this->setting['sendregisterverify'] == 1 && !$sendurl) {
 				$_GET['email'] = strtolower($hash[0]);
-				$this->setting['regverify'] = $this->setting['regverify'] == 1 ? 0 : $this->setting['regverify'];
-				if(!$this->setting['regverify']) {
+				if($this->setting['regverify'] == 1) {
 					$groupinfo['groupid'] = $this->setting['newusergroupid'];
 				}
 				$emailstatus = 1;
+			}
+
+			$smsstatus = 0;
+			if($sendsms) {
+			    checksms($_GET['sms']);
+
+			    if(!check_smscode($_GET['smscode'],$_GET['sms'])){
+			        showmessage('register_sms_check_fail');
+			    }
+
+				if($this->setting['regverify'] == 3) {
+					$groupinfo['groupid'] = $this->setting['newusergroupid'];
+				}
+				$smsstatus = 1;
 			}
 
 			if($this->setting['regstatus'] == 2 && empty($invite) && !$invitestatus) {
@@ -609,6 +644,7 @@ class register_ctl {
 					}
 				}
 				$email = strtolower(trim($_GET['email']));
+				$sms = trim($_GET['sms']);
 				if(empty($this->setting['ignorepassword'])) {
 					if($_GET['password'] !== $_GET['password2']) {
 						showmessage('profile_passwd_notmatch');
@@ -696,7 +732,7 @@ class register_ctl {
 			}
 
 			if(!$activation) {
-				$uid = uc_user_register(addslashes($username), $password, $email, $questionid, $answer, $_G['clientip']);
+				$uid = uc_user_register(addslashes($username), $password, $email, $sms, $questionid, $answer, $_G['clientip']);
 				if($uid <= 0) {
 					if($uid == -1) {
 						showmessage('profile_username_illegal');
@@ -710,12 +746,16 @@ class register_ctl {
 						showmessage('profile_email_domain_illegal');
 					} elseif($uid == -6) {
 						showmessage('profile_email_duplicate');
+					} elseif($uid == -7) {
+						showmessage('profile_sms_illegal');
+					} elseif($uid == -8) {
+						showmessage('profile_sms_duplicate');
 					} else {
 						showmessage('undefined_action');
 					}
 				}
 			} else {
-				list($uid, $username, $email) = $activation;
+				list($uid, $username, $email, $sms) = $activation;
 			}
 			$_G['username'] = $username;
 			if(getuserbyuid($uid, 1)) {
@@ -776,11 +816,14 @@ class register_ctl {
 				$groupinfo['groupid'] = $this->setting['inviteconfig']['invitegroupid'];
 			}
 
-			$init_arr = array('credits' => explode(',', $this->setting['initcredits']), 'profile'=>$profile, 'emailstatus' => $emailstatus);
+			$init_arr = array('credits' => explode(',', $this->setting['initcredits']), 'profile'=>$profile, 'emailstatus' => $emailstatus, 'smsstatus' => $smsstatus);
 
-			C::t('common_member')->insert($uid, $username, $password, $email, $_G['clientip'], $groupinfo['groupid'], $init_arr);
+			C::t('common_member')->insert($uid, $username, $password, $email, $sms, $_G['clientip'], $groupinfo['groupid'], $init_arr);
 			if($emailstatus) {
 				updatecreditbyaction('realemail', $uid);
+			}
+			if($smsstatus) {
+			    updatecreditbyaction('realsms', $uid);
 			}
 			if($verifyarr) {
 				$setverify = array(
@@ -862,19 +905,27 @@ class register_ctl {
 					updatestat('appinvite');
 				}
 			}
-
+			$welcomemsg = $welcomemsg ? dunserialize($welcomemsg) : '';
 			if($welcomemsg && !empty($welcomemsgtxt)) {
 				$welcomemsgtitle = replacesitevar($welcomemsgtitle);
 				$welcomemsgtxt = replacesitevar($welcomemsgtxt);
-				if($welcomemsg == 1) {
-					$welcomemsgtxt = nl2br(str_replace(':', '&#58;', $welcomemsgtxt));
-					notification_add($uid, 'system', $welcomemsgtxt, array('from_id' => 0, 'from_idtype' => 'welcomemsg'), 1);
-				} elseif($welcomemsg == 2) {
+				if(in_array('1', $welcomemsg)) {
+					notification_add($uid, 'system', nl2br(str_replace(':', '&#58;', $welcomemsgtxt)), array('from_id' => 0, 'from_idtype' => 'welcomemsg'), 1);
+				}
+				if($email && in_array('2', $welcomemsg)) {
 					sendmail_cron($email, $welcomemsgtitle, $welcomemsgtxt);
-				} elseif($welcomemsg == 3) {
-					sendmail_cron($email, $welcomemsgtitle, $welcomemsgtxt);
-					$welcomemsgtxt = nl2br(str_replace(':', '&#58;', $welcomemsgtxt));
-					notification_add($uid, 'system', $welcomemsgtxt, array('from_id' => 0, 'from_idtype' => 'welcomemsg'), 1);
+				}
+				if($sms && in_array('3', $welcomemsg)) {
+				    $smsconfig = dunserialize($_G['setting']['sms']);
+				    $smstemp = $smsconfig['template']['add_member'];
+				    $smsvar = array(
+				        'username' => $_G['username'],
+				        'bbname' => $_G['setting']['bbname'],
+				        'sitename' => $_G['setting']['sitename'],
+				        'siteurl' => $_G['setting']['siteurl'],
+				        'password' => $password,
+				    );
+					sendsms_cron($sms, $smsvar, $smstemp);
 				}
 			}
 
@@ -888,8 +939,11 @@ class register_ctl {
 
 			$url_forward = dreferer();
 			$refreshtime = 3000;
+			$message = 'register_succeed';
+			$locationmessage = 'register_succeed_location';
 			switch($this->setting['regverify']) {
 				case 1:
+				    if($emailstatus) break;
 					$idstring = random(6);
 					$authstr = $this->setting['regverify'] == 1 ? "$_G[timestamp]\t2\t$idstring" : '';
 					C::t('common_member_field_forum')->update($_G['uid'], array('authstr' => $authstr));
@@ -911,10 +965,11 @@ class register_ctl {
 					$message = 'register_manual_verify';
 					$locationmessage = 'register_manual_verify_location';
 					break;
-				default:
-					$message = 'register_succeed';
-					$locationmessage = 'register_succeed_location';
-					break;
+				case 3:
+				    if($smsstatus) break;
+				    $message = 'register_sms_verify';
+				    $locationmessage = 'register_sms_verify_location';
+				    break;
 			}
 			$param = array('bbname' => $this->setting['bbname'], 'username' => $_G['username'], 'usergroup' => $_G['group']['grouptitle'], 'uid' => $_G['uid']);
 			if(strpos($url_forward, $this->setting['regname']) !== false || strpos($url_forward, 'buyinvitecode') !== false) {

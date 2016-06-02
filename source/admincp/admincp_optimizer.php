@@ -26,6 +26,7 @@ $optimizer_option = array(
 $security_option = array(
 	'optimizer_inviteregister',
 	'optimizer_emailregister',
+	'optimizer_smsregister',
 	'optimizer_pwlength',
 	'optimizer_regmaildomain',
 	'optimizer_ipregctrl',

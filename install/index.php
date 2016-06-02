@@ -9,7 +9,10 @@
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 @set_time_limit(1000);
-@set_magic_quotes_runtime(0);
+
+if(PHP_VERSION < '5.3.0') {
+	@set_magic_quotes_runtime(0);
+}
 
 define('IN_DISCUZ', TRUE);
 define('IN_COMSENZ', TRUE);
@@ -228,6 +231,7 @@ if($method == 'show_license') {
 	$tablepre = $_config['db'][1]['tablepre'];
 
 	$adminemail = 'admin@admin.com';
+	$adminsms = '13888888888';
 
 	$error_msg = array();
 	if(isset($form_db_init_items) && is_array($form_db_init_items)) {
@@ -319,14 +323,16 @@ if($method == 'show_license') {
 			show_msg('tablepre_invalid', $tablepre, 0);
 		}
 
-		if($username && $email && $password) {
+		if($username && $email && $password && $sms) {
 			if(strlen($username) > 15 || preg_match("/^$|^c:\\con\\con$|　|[,\"\s\t\<\>&]|^Guest/is", $username)) {
 				show_msg('admin_username_invalid', $username, 0);
 			} elseif(!strstr($email, '@') || $email != stripslashes($email) || $email != dhtmlspecialchars($email)) {
 				show_msg('admin_email_invalid', $email, 0);
-			} else {
+			} elseif(strlen($sms)!=11 || $sms != stripslashes($sms) || $sms != dhtmlspecialchars($sms)) {
+				show_msg('admin_sms_invalid', $sms, 0);
+			}  else {
 				if(!DZUCFULL) {
-					$adminuser = check_adminuser($username, $password, $email);
+					$adminuser = check_adminuser($username, $password, $email, $sms);
 					if($adminuser['uid'] < 1) {
 						show_msg($adminuser['error'], '', 0);
 					}
@@ -393,6 +399,7 @@ if($method == 'show_license') {
 		$db->query("REPLACE INTO {$tablepre}common_setting (skey, svalue) VALUES ('authkey', '$authkey')");
 		$db->query("REPLACE INTO {$tablepre}common_setting (skey, svalue) VALUES ('siteuniqueid', '$siteuniqueid')");
 		$db->query("REPLACE INTO {$tablepre}common_setting (skey, svalue) VALUES ('adminemail', '$email')");
+		$db->query("REPLACE INTO {$tablepre}common_setting (skey, svalue) VALUES ('adminsms', '$sms')");
 
 		install_extra_setting();
 
@@ -400,7 +407,7 @@ if($method == 'show_license') {
 
 		$password = md5(random(10));
 
-		$db->query("REPLACE INTO {$tablepre}common_member (uid, username, password, adminid, groupid, email, regdate) VALUES ('$uid', '$username', '$password', '1', '1', '$email', '".time()."');");
+		$db->query("REPLACE INTO {$tablepre}common_member (uid, username, password, adminid, groupid, email, sms, regdate) VALUES ('$uid', '$username', '$password', '1', '1', '$email', '$sms', '".time()."');");
 
 		$notifyusers = addslashes('a:1:{i:1;a:2:{s:8:"username";s:'.strlen($username).':"'.$username.'";s:5:"types";s:20:"11111111111111111111";}}');
 		$db->query("REPLACE INTO {$tablepre}common_setting (skey, svalue) VALUES ('notifyusers', '$notifyusers')");

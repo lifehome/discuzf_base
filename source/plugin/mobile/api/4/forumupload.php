@@ -6,6 +6,7 @@
  *
  *      $Id: forumupload.php 35182 2015-01-12 02:05:50Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

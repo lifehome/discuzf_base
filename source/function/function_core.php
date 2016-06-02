@@ -94,7 +94,7 @@ function getuserprofile($field) {
 	}
 	static $tablefields = array(
 		'count'		=> array('extcredits1','extcredits2','extcredits3','extcredits4','extcredits5','extcredits6','extcredits7','extcredits8','friends','posts','threads','digestposts','doings','blogs','albums','sharings','attachsize','views','oltime','todayattachs','todayattachsize', 'follower', 'following', 'newfollower', 'blacklist'),
-		'status'	=> array('regip','lastip','lastvisit','lastactivity','lastpost','lastsendmail','invisible','buyercredit','sellercredit','favtimes','sharetimes','profileprogress'),
+		'status'	=> array('regip','lastip','lastvisit','lastactivity','lastpost','lastsendmail','lastsendsms','invisible','buyercredit','sellercredit','favtimes','sharetimes','profileprogress'),
 		'field_forum'	=> array('publishfeed','customshow','customstatus','medals','sightml','groupterms','authstr','groups','attentiongroup'),
 		'field_home'	=> array('videophoto','spacename','spacedescription','domain','addsize','addfriend','menunum','theme','spacecss','blockposition','recentnote','spacenote','privacy','feedfriend','acceptemail','magicgift','stickblogs'),
 		'profile'	=> array('realname','gender','birthyear','birthmonth','birthday','constellation','zodiac','telephone','mobile','idcardtype','idcard','address','zipcode','nationality','birthprovince','birthcity','resideprovince','residecity','residedist','residecommunity','residesuite','graduateschool','company','education','occupation','position','revenue','affectivestatus','lookingfor','bloodtype','height','weight','alipay','icq','qq','yahoo','msn','taobao','site','bio','interest','field1','field2','field3','field4','field5','field6','field7','field8'),
@@ -369,6 +369,10 @@ function isemail($email) {
 	return strlen($email) > 6 && strlen($email) <= 32 && preg_match("/^([A-Za-z0-9\-_.+]+)@([A-Za-z0-9\-]+[.][A-Za-z0-9\-.]+)$/", $email);
 }
 
+function issms($mobile) {
+	return strlen($mobile) == 11 && preg_match("/^1\d{10}$/", $mobile);
+}
+
 function quescrypt($questionid, $answer) {
 	return $questionid > 0 && $answer != '' ? substr(md5($answer.md5($questionid)), 16, 8) : '';
 }
@@ -518,6 +522,15 @@ function checktplrefresh($maintpl, $subtpl, $timecompare, $templateid, $cachefil
 
 function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primaltpl='') {
 	global $_G;
+
+	if($_G['setting']['plugins']['func'][HOOKTYPE]['template']) {
+		$param = func_get_args();
+		hookscript('template', 'global', 'funcs', array('param' => $param, 'caller' => 'template'), 'template');
+	}
+
+	if($_G['notemplate']) {
+		return false;
+	}
 
 	static $_init_style = false;
 	if($_init_style === false) {
@@ -825,21 +838,16 @@ function libfile($libname, $folder = '') {
 }
 
 function dstrlen($str) {
-	if(strtolower(CHARSET) != 'utf-8') {
-		return strlen($str);
-	}
-	$count = 0;
-	for($i = 0; $i < strlen($str); $i++){
-		$value = ord($str[$i]);
-		if($value > 127) {
-			$count++;
-			if($value >= 192 && $value <= 223) $i++;
-			elseif($value >= 224 && $value <= 239) $i = $i + 2;
-			elseif($value >= 240 && $value <= 247) $i = $i + 3;
-	    	}
-    		$count++;
-	}
-	return $count;
+    $charset = strtolower(CHARSET);
+    if(function_exists("mb_strlen")){
+        return mb_strlen($str,$charset);
+    }
+    $re['utf-8']   = "/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xff][\x80-\xbf]{3}/";
+    $re['gb2312'] = "/[\x01-\x7f]|[\xb0-\xf7][\xa0-\xfe]/";
+    $re['gbk']    = "/[\x01-\x7f]|[\x81-\xfe][\x40-\xfe]/";
+    $re['big5']   = "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/";
+    preg_match_all($re[$charset], $str, $match);
+    return count($match[0]);
 }
 
 function cutstr($string, $length, $dot = ' ...') {
@@ -1086,7 +1094,9 @@ function output_replace($content) {
 			$_G['setting']['output']['preg']['replace'] = str_replace('{CURHOST}', $_G['siteurl'], $_G['setting']['output']['preg']['replace']);
 		}
 
-		$content = preg_replace($_G['setting']['output']['preg']['search'], $_G['setting']['output']['preg']['replace'], $content);
+		foreach ($_G['setting']['output']['preg']['search'] as $key => $value) {
+			$content = preg_replace_callback($value, create_function('$matches', 'return '.$_G['setting']['output']['preg']['replace'][$key].';'), $content);
+		}
 	}
 
 	return $content;
@@ -1164,7 +1174,7 @@ function hookscript($script, $hscript, $type = 'funcs', $param = array(), $func 
 					if(!method_exists($pluginclasses[$classkey], $hookfunc[1])) {
 						continue;
 					}
-					$return = $pluginclasses[$classkey]->$hookfunc[1]($param);
+					$return = call_user_func(array($pluginclasses[$classkey], $hookfunc[1]), $param);
 
 					if(substr($hookkey, -7) == '_extend' && !empty($_G['setting']['pluginhooks'][$hookkey])) {
 						continue;
@@ -1202,11 +1212,11 @@ function hookscriptoutput($tplfile) {
 		return;
 	}
 	hookscript('global', 'global');
+	$_G['hookscriptoutput'] = true;
 	if(defined('CURMODULE')) {
 		$param = array('template' => $tplfile, 'message' => $_G['hookscriptmessage'], 'values' => $_G['hookscriptvalues']);
 		hookscript(CURMODULE, $_G['basescript'], 'outputfuncs', $param);
 	}
-	$_G['hookscriptoutput'] = true;
 }
 
 function pluginmodule($pluginid, $type) {
@@ -1351,6 +1361,14 @@ function seccheck($rule, $param = array()) {
 
 function make_seccode($seccode = '') {
 	return helper_seccheck::make_seccode($seccode);
+}
+
+function make_smscode($sms, $smscode = ''){
+    return helper_seccheck::make_smscode($sms, $smscode);
+}
+
+function check_smscode($value, $sms) {
+	return helper_seccheck::check_smscode($value, $sms);
 }
 
 function make_secqaa() {
@@ -1850,6 +1868,10 @@ function cknewuser($return=0) {
 		if(empty($return)) showmessage('no_privilege_email', '', array(), array());
 		$result = false;
 	}
+	if($_G['setting']['need_sms'] && empty($ckuser['smsstatus'])) {
+		if(empty($return)) showmessage('no_privilege_sms', '', array(), array());
+		$result = false;
+	}
 	if($_G['setting']['need_friendnum']) {
 		space_merge($ckuser, 'count');
 		if($ckuser['friends'] < $_G['setting']['need_friendnum']) {
@@ -2091,6 +2113,19 @@ function currentlang() {
 		return '';
 	}
 }
+
+
+if(PHP_VERSION < '7.0.0') {
+	function dpreg_replace($pattern, $replacement, $subject, $limit = -1, &$count) {
+		return preg_replace($pattern, $replacement, $subject, $limit, $count);
+	}
+} else {
+	function dpreg_replace($pattern, $replacement, $subject, $limit = -1, &$count) {
+		require_once libfile('function/preg');
+		return _dpreg_replace($pattern, $replacement, $subject, $limit, $count);
+	}
+}
+
 
 
 ?>

@@ -92,9 +92,27 @@ if(!empty($_G['setting']['advexpiration']['allow'])) {
 					notification_add($member['uid'], 'system', 'system_adv_expiration', $noticelang, 1);
 				}
 				if(in_array('mail', $_G['setting']['advexpiration']['method'])) {
+				    if(!function_exists('sendmail')) {
+				        include_once libfile('function/mail');
+				    }
 					if(!sendmail("$member[username] <$member[email]>", lang('email', 'adv_expiration_subject', $noticelang), lang('email', 'adv_expiration_message', $noticelang))) {
 						runlog('sendmail', "$member[email] sendmail failed.");
 					}
+				}
+				if(in_array('sms', $_G['setting']['advexpiration']['method'])) {
+				    include_once libfile('function/sms');
+				    $smsvar = array(
+				        'bbname' => $_G['setting']['bbname'],
+				        'sitename' => $_G['setting']['sitename'],
+				        'siteurl' => $_G['setting']['siteurl'],
+				        'day' => $_G['setting']['advexpiration']['day'],
+				        'advs' => implode(",", $advs),
+				    );
+				    $smsconfig = dunserialize($_G['setting']['sms']);
+				    $smstemp = $smsconfig['template']['adv_expiration'];
+				    if(!sendsms($member['sms'], $smsvar, $smstemp)) {
+				        runlog('sendsms', "$member[sms] sendsms failed.");
+				    }
 				}
 			}
 		}

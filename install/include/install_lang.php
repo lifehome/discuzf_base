@@ -114,6 +114,8 @@ $lang = array(
 	'click_to_back' => '點擊返回上一步',
 	'adminemail' => '系統信箱 Email',
 	'adminemail_comment' => '用於發送程序錯誤報告',
+	'adminsms' => '系統短信接收人',
+	'adminsms_comment' => '用於發送程序錯誤通知',
 	'dbhost_comment' => '數據庫服務器地址, 一般為 localhost',
 	'tablepre_comment' => '同一數據庫運行多個論壇時，請修改前綴',
 	'forceinstall_check_label' => '我要刪除數據，強制安裝 !!!',
@@ -137,9 +139,11 @@ $lang = array(
 	'dbinfo_dbuser_invalid' => '數據庫用戶名為空，或者格式錯誤，請檢查',
 	'dbinfo_dbpw_invalid' => '數據庫密碼為空，或者格式錯誤，請檢查',
 	'dbinfo_adminemail_invalid' => '系統郵箱為空，或者格式錯誤，請檢查',
+	'dbinfo_adminsms_invalid' => '系統手機為空，或者格式錯誤，請檢查',
 	'dbinfo_tablepre_invalid' => '數據表前綴為空，或者格式錯誤，請檢查',
 	'admininfo_username_invalid' => '管理員用戶名為空，或者格式錯誤，請檢查',
 	'admininfo_email_invalid' => '管理員Email為空，或者格式錯誤，請檢查',
+	'admininfo_sms_invalid' => '管理員手機為空，或者格式錯誤，請檢查',
 	'admininfo_password_invalid' => '管理員密碼為空，請填寫',
 	'admininfo_password2_invalid' => '兩次密碼不一致，請檢查',
 
@@ -148,6 +152,7 @@ $lang = array(
 
 	'username' => '管理員賬號',
 	'email' => '管理員 Email',
+	'sms' => '管理員手機',
 	'password' => '管理員密碼',
 	'password_comment' => '管理員密碼不能為空',
 	'password2' => '重複密碼',
@@ -158,6 +163,7 @@ $lang = array(
 	'admin_username_invalid' => '非法用戶名，用戶名長度不應當超過 15 個英文字符，且不能包含特殊字符，一般是中文，字母或者數字',
 	'admin_password_invalid' => '密碼和上面不一致，請重新輸入',
 	'admin_email_invalid' => 'Email 地址錯誤，此郵件地址已經被使用或者格式無效，請更換為其他地址',
+	'admin_sms_invalid' => '手機號錯誤，此手機號已經被使用或者格式無效，請更換為其他號碼',
 	'admin_invalid' => '您的信息管理員信息沒有填寫完整，請仔細填寫每個項目',
 	'admin_exist_password_error' => '該用戶已經存在，如果您要設置此用戶為論壇的管理員，請正確輸入該用戶的密碼，或者請更換論壇管理員的名字',
 
@@ -250,7 +256,7 @@ $lang = array(
 
 	'license' => '<div class="license"><h1>中文版授權協議 適用於中文用戶</h1>
 
-<p>版權所有 (c) 2001-2013，北京康盛新創科技有限責任公司保留所有權利。</p>
+<p>版權所有 (c) 2001-2016，北京康盛新創科技有限責任公司保留所有權利。</p>
 
 <p>感謝您選擇康盛產品。希望我們的努力能為您提供一個高效快速、強大的站點解決方案，和強大的社區論壇解決方案。康盛公司網址為 http://www.comsenz.com，產品官方討論區網址為 http://www.discuz.net。</p>
 

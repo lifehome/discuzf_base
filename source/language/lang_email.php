@@ -14,7 +14,6 @@ if(!defined('IN_DISCUZ')) {
 
 $lang = array
 (
-	'hello' => '您好',
 	'moderate_member_invalidate' => '否決',
 	'moderate_member_delete' => '刪除',
 	'moderate_member_validate' => '通過',
@@ -152,26 +151,6 @@ $lang = array
 <br />
 {bbname} 管理團隊.<br />
 {siteurl}',
-
-
-	'birthday_subject' =>		'祝您生日快樂',
-	'birthday_message' => 		'<br />
-{username}，<br />
-這封信是由 {bbname} 發送的。<br />
-<br />
-您收到這封郵件，是由於這個郵箱地址在 {bbname} 被登記為用戶郵箱，<br />
-並且按照您填寫的信息，今天是您的生日。很高興能在此時為您獻上一份<br />
-生日祝福，我謹代表{bbname}管理團隊，衷心祝福您生日快樂。<br />
-<br />
-如果您並非 {bbname} 的會員，或今天並非您的生日，可能是有人誤用了您的郵<br />
-件地址，或錯誤的填寫了生日信息。本郵件不會多次重複發送，請忽略這封郵件。<br />
-<br />
-<br />
-此致<br />
-<br />
-{bbname} 管理團隊.<br />
-{siteurl}',
-
 	'email_to_friend_subject' =>	'{$_G[member][username]} 推薦給您: $thread[subject]',
 	'email_to_friend_message' =>	'<br />
 這封信是由 {$_G[setting][bbname]} 的 {$_G[member][username]} 發送的。<br />
@@ -279,5 +258,3 @@ $_G[siteurl]',
 重要！
 <br />----------------------------------------------------------------------<br />',
 );
-
-?>

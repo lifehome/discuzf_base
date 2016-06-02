@@ -416,7 +416,7 @@ function versioncompatible($versions) {
 	$versions = strip_tags($versions);
 	foreach(explode(',', $versions) as $version) {
 		list($version) = explode(' ', trim($version));
-		if($version && ($currentversion === $version || $version === 'X3' || $version === 'X3.1')) {
+		if($version && ($currentversion === $version || $version === 'X3' || $version === 'X3.1' || $version === 'X3.2' || $version === 'F1.0')) {
 			return true;
 		}
 	}

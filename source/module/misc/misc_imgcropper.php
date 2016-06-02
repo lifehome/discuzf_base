@@ -10,6 +10,9 @@ if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
+if ($_GET['img']) {
+    $_GET['img'] = dhtmlspecialchars($_GET['img'], ENT_QUOTES);
+}
 
 if(!submitcheck('imgcroppersubmit')) {
 	if($_GET['op'] == 'loadcropper') {

@@ -108,6 +108,9 @@ class control extends adminbase {
 				if($index = $this->db->fetch_array($query)) {
 					$this->db->query("DELETE FROM ".UC_DBTABLEPRE.$_ENV['pm']->getposttablename($index['plid'])." WHERE pmid='$pmid'");
 					if($index['pmtype'] == 1) {
+					    $lastmessage = unserialize($index['lastmessage']);
+					    $lastmessage['lastsummary'] = $this->lang['pm_delete_done'];
+					    $lastmessage = serialize($lastmessage);
 						$authorcount = $this->db->result_first("SELECT COUNT(*) FROM ".UC_DBTABLEPRE.$_ENV['pm']->getposttablename($index['plid'])." WHERE plid='".$index['plid']."' AND delstatus IN (0, 2)");
 						$othercount = $this->db->result_first("SELECT COUNT(*) FROM ".UC_DBTABLEPRE.$_ENV['pm']->getposttablename($index['plid'])." WHERE plid='".$index['plid']."' AND delstatus IN (0, 1)");
 						$users = explode('_', $index['min_max']);
@@ -131,6 +134,7 @@ class control extends adminbase {
 							} else {
 								$this->db->query("DELETE FROM ".UC_DBTABLEPRE."pm_members WHERE plid='".$index['plid']."' AND uid='".$other."'");
 							}
+							$this->db->query("UPDATE ".UC_DBTABLEPRE."pm_lists SET lastmessage='". $lastmessage ."' WHERE plid='".$index['plid']."'");
 						}
 					} elseif($index['pmtype'] == 2) {
 						$count = $this->db->result_first("SELECT COUNT(*) FROM ".UC_DBTABLEPRE.$_ENV['pm']->getposttablename($index['plid'])." WHERE plid='".$index['plid']."'");

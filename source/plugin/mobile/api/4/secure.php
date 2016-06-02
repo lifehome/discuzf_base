@@ -7,6 +7,7 @@
  *      $Id: secure.php 34428 2014-04-25 09:09:34Z nemohou $
  */
 
+
 if(!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

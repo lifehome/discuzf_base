@@ -128,10 +128,22 @@ class table_common_member extends discuz_table_archive
 		return $groupid ? DB::result_first('SELECT COUNT(*) FROM %t WHERE '.DB::field('groupid', $groupid), array($this->_table)) : 0;
 	}
 
+	public function count_by_groupid_or_extgroupid($groupid) {
+		return $groupid ? DB::result_first('SELECT COUNT(*) FROM %t WHERE '.DB::field('groupid', $groupid).' or '.DB::field('extgroupids', $groupid).' or '.DB::field('extgroupids', "%i\t".$groupid."%i", 'like').' or '.DB::field('extgroupids', "%i".$groupid."\t%i", 'like'), array($this->_table,'%','%','%','%')) : 0;
+	}
+
 	public function fetch_all_by_groupid($groupid, $start = 0, $limit = 0) {
 		$users = array();
 		if(($groupid = dintval($groupid, true))) {
 			$users = DB::fetch_all('SELECT * FROM '.DB::table($this->_table).' WHERE '.DB::field('groupid', $groupid).' '.DB::limit($start, $limit), null, 'uid');
+		}
+		return $users;
+	}
+
+	public function fetch_all_by_groupid_or_extgroupid($groupid, $start = 0, $limit = 0) {
+		$users = array();
+		if(($groupid = dintval($groupid, true))) {
+			$users = DB::fetch_all('SELECT * FROM '.DB::table($this->_table).' WHERE '.DB::field('groupid', $groupid).' or '.DB::field('extgroupids', $groupid).' or '.DB::field('extgroupids', "%i\t".$groupid."%i", 'like').' or '.DB::field('extgroupids', "%i".$groupid."\t%i", 'like').' '.DB::limit($start, $limit), null, 'uid');
 		}
 		return $users;
 	}
@@ -186,6 +198,17 @@ class table_common_member extends discuz_table_archive
 		return $user;
 	}
 
+	public function fetch_by_sms($sms, $fetch_archive = 0) {
+		$user = array();
+		if($sms) {
+			$user = DB::fetch_first('SELECT * FROM %t WHERE sms=%s', array($this->_table, $sms));
+			if(isset($this->membersplit) && $fetch_archive && empty($user)) {
+				$user = C::t($this->_table.'_archive')->fetch_by_sms($sms, 0);
+			}
+		}
+		return $user;
+	}
+
 	public function fetch_all_by_email($emails, $fetch_archive = 1) {
 		$users = array();
 		if(!empty($emails)) {
@@ -197,12 +220,34 @@ class table_common_member extends discuz_table_archive
 		return $users;
 	}
 
+	public function fetch_all_by_sms($smses, $fetch_archive = 1) {
+		$users = array();
+		if(!empty($smses)) {
+			$users = DB::fetch_all('SELECT * FROM %t WHERE %i', array($this->_table, DB::field('sms', $smses)), 'sms');
+			if(isset($this->membersplit) && $fetch_archive && count($smses) !== count($users)) {
+				$users += C::t($this->_table.'_archive')->fetch_all_by_sms($smses, 0);
+			}
+		}
+		return $users;
+	}
+
 	public function count_by_email($email, $fetch_archive = 0) {
 		$count = 0;
 		if($email) {
 			$count = DB::result_first('SELECT COUNT(*) FROM %t WHERE email=%s', array($this->_table, $email));
 			if(isset($this->membersplit) && $fetch_archive) {
 				$count += C::t($this->_table.'_archive')->count_by_email($email, 0);
+			}
+		}
+		return $count;
+	}
+
+	public function count_by_sms($sms, $fetch_archive = 0) {
+		$count = 0;
+		if($sms) {
+			$count = DB::result_first('SELECT COUNT(*) FROM %t WHERE sms=%s', array($this->_table, $sms));
+			if(isset($this->membersplit) && $fetch_archive) {
+				$count += C::t($this->_table.'_archive')->count_by_sms($sms, 0);
 			}
 		}
 		return $count;
@@ -240,7 +285,7 @@ class table_common_member extends discuz_table_archive
 		$sql = !empty($username) ? " WHERE username LIKE '".addslashes(stripsearchkey($username))."%'" : '';
 
 		$memberlist = array();
-		$query = DB::query("SELECT m.uid, m.username, mp.gender, m.email, m.regdate, ms.lastvisit, mc.posts, m.credits
+		$query = DB::query("SELECT m.uid, m.username, mp.gender, m.email, m.sms, m.regdate, ms.lastvisit, mc.posts, m.credits
 			FROM ".DB::table($this->_table)." m
 			LEFT JOIN ".DB::table('common_member_profile')." mp ON mp.uid=m.uid
 			LEFT JOIN ".DB::table('common_member_status')." ms ON ms.uid=m.uid
@@ -269,7 +314,7 @@ class table_common_member extends discuz_table_archive
 		return false;
 	}
 
-	public function insert($uid, $username, $password, $email, $ip, $groupid, $extdata, $adminid = 0) {
+	public function insert($uid, $username, $password, $email, $sms, $ip, $groupid, $extdata, $adminid = 0) {
 		if(($uid = dintval($uid))) {
 			$credits = isset($extdata['credits']) ? $extdata['credits'] : array();
 			$profile = isset($extdata['profile']) ? $extdata['profile'] : array();
@@ -279,10 +324,12 @@ class table_common_member extends discuz_table_archive
 				'username' => (string)$username,
 				'password' => (string)$password,
 				'email' => (string)$email,
+				'sms' => (string)$sms,
 				'adminid' => intval($adminid),
 				'groupid' => intval($groupid),
 				'regdate' => TIMESTAMP,
 				'emailstatus' => intval($extdata['emailstatus']),
+				'smsstatus' => intval($extdata['smsstatus']),
 				'credits' => dintval($credits[0]),
 				'timeoffset' => 9999
 			);
@@ -293,7 +340,8 @@ class table_common_member extends discuz_table_archive
 				'lastvisit' => TIMESTAMP,
 				'lastactivity' => TIMESTAMP,
 				'lastpost' => 0,
-				'lastsendmail' => 0
+				'lastsendmail' => 0,
+				'lastsendsms' => 0
 			);
 			$count = array(
 				'uid' => $uid,

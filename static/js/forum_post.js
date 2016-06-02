@@ -724,12 +724,14 @@ function insertText(str) {
 }
 
 function insertAllAttachTag() {
+	var attachArray = new Array();
 	var attachListObj = $('e_attachlist').getElementsByTagName("tbody");
 	for(var i in attachListObj) {
 		if(typeof attachListObj[i] == "object") {
 			var attach = attachListObj[i];
 			var ids = attach.id.split('_');
-			if(ids[0] == 'attach') {
+			if(ids[0] == 'attach' && !in_array(ids[1], attachArray)) {
+				attachArray[i] = ids[1];
 				if($('attachname'+ids[1]) && attach.style.display != 'none') {
 					if(parseInt($('attachname'+ids[1]).getAttribute('isimage'))) {
 						insertAttachimgTag(ids[1]);

@@ -18,7 +18,8 @@ $type = !empty($_GET['type']) ? $_GET['type'] : 'fixwr';
 list($w, $h) = explode('x', $_GET['size']);
 $dw = intval($w);
 $dh = intval($h);
-$thumbfile = 'image/'.helper_attach::makethumbpath($daid, $dw, $dh);$attachurl = helper_attach::attachpreurl();
+$thumbfile = 'image/'.helper_attach::makethumbpath($daid, $dw, $dh);
+$attachurl = helper_attach::attachpreurl();
 if(!$nocache) {
 	if(file_exists($_G['setting']['attachdir'].$thumbfile)) {
 		dheader('location: '.$attachurl.$thumbfile);

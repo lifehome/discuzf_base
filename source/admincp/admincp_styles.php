@@ -126,6 +126,7 @@ if($operation == 'admin') {
 	$defaultid1 = C::t('common_setting')->fetch('styleid1');
 	$defaultid2 = C::t('common_setting')->fetch('styleid2');
 	$defaultid3 = C::t('common_setting')->fetch('styleid3');
+	$defaultid4 = C::t('common_setting')->fetch('styleid4');
 
 	if(!submitcheck('stylesubmit')) {
 		$narray = array();
@@ -169,10 +170,12 @@ if($operation == 'admin') {
 			$isdefault1 = $id == $defaultid1 ? 'checked' : '';
 			$isdefault2 = $id == $defaultid2 ? 'checked' : '';
 			$isdefault3 = $id == $defaultid3 ? 'checked' : '';
+			$isdefault4 = $id == $defaultid4 ? 'checked' : '';
 			$mobile1exists = file_exists($style['directory'].'/mobile');
 			$d1exists = file_exists($style['directory'].'/mobile');
 			$d2exists = file_exists($style['directory'].'/touch');
 			$d3exists = file_exists($style['directory'].'/wml');
+			$d4exists = file_exists($style['directory'].'/m');
 			$available = $style['available'] ? 'checked' : NULL;
 			$preview = file_exists($style['directory'].'/preview.jpg') ? $style['directory'].'/preview.jpg' : './static/image/admincp/stylepreview.gif';
 			$previewlarge = file_exists($style['directory'].'/preview_large.jpg') ? $style['directory'].'/preview_large.jpg' : '';
@@ -189,11 +192,11 @@ if($operation == 'admin') {
 				($id > 0 ? "<p style=\"margin-bottom: 12px;\"><img width=\"110\" height=\"120\" ".($previewlarge ? 'style="cursor:pointer" title="'.$lang['preview_large'].'" onclick="zoom(this, \''.$previewlarge.'\', 1)" ' : '')."src=\"$preview\" alt=\"$lang[preview]\"/></p>
 				<p style=\"margin: 2px 0\"><input type=\"text\" class=\"txt\" name=\"namenew[$id]\" value=\"$style[name]\" style=\"margin:0; width: 104px;\"></p>".
 				$updatestring[$addonids[$style['styleid']]]."</td><td valign=\"top\">
-				<p> $lang[styles_default]</p>
 				<p style=\"margin: 1px 0\"><label><input type=\"radio\" class=\"radio\" name=\"defaultnew\" value=\"$id\" $isdefault /> $lang[styles_default0]</label></p>
 				".($d1exists ? "<p style=\"margin: 1px 0\"><label><input type=\"radio\" class=\"radio\" name=\"defaultnew1\" value=\"$id\" $isdefault1 /> $lang[styles_default1]</label></p>" : "<p style=\"margin: 1px 0\" class=\"lightfont\"><label><input type=\"radio\" class=\"radio\" disabled readonly /> $lang[styles_default1]</label></p>")."
 				".($d2exists ? "<p style=\"margin: 1px 0\"><label><input type=\"radio\" class=\"radio\" name=\"defaultnew2\" value=\"$id\" $isdefault2 /> $lang[styles_default2]</label></p>" : "<p style=\"margin: 1px 0\" class=\"lightfont\"><label><input type=\"radio\" class=\"radio\" disabled readonly /> $lang[styles_default2]</label></p>")."
 				".($d3exists ? "<p style=\"margin: 1px 0\"><label><input type=\"radio\" class=\"radio\" name=\"defaultnew3\" value=\"$id\" $isdefault3 /> $lang[styles_default3]</label></p>" : "<p style=\"margin: 1px 0\" class=\"lightfont\"><label><input type=\"radio\" class=\"radio\" disabled readonly /> $lang[styles_default3]</label></p>")."
+				".($d4exists ? "<p style=\"margin: 1px 0\"><label><input type=\"radio\" class=\"radio\" name=\"defaultnew4\" value=\"$id\" $isdefault4 /> $lang[styles_default4]</label></p>" : "<p style=\"margin: 1px 0\" class=\"lightfont\"><label><input type=\"radio\" class=\"radio\" disabled readonly /> $lang[styles_default4]</label></p>")."
 				<p style=\"margin: 8px 0 0 0\"><label>".($isdefault ? '<input class="checkbox" type="checkbox" disabled="disabled" />' : '<input class="checkbox" type="checkbox" name="delete[]" value="'.$id.'" />')." $lang[styles_uninstall]</label></p>
 				<p style=\"margin: 8px 0 2px 0\"><a href=\"".ADMINSCRIPT."?action=styles&operation=edit&id=$id\">$lang[edit]</a> &nbsp;".
 					($isplugindeveloper || !$addonids[$id] || !cloudaddons_getmd5($addonids[$id]) ? " <a href=\"".ADMINSCRIPT."?action=styles&operation=export&id=$id\">$lang[export]</a><br />" : '<br />').
@@ -217,10 +220,11 @@ if($operation == 'admin') {
 
 		shownav('style', 'styles_admin');
 		showsubmenu('styles_admin', array(
-			array('admin', 'styles', '1'),
-			array('import', 'styles&operation=import', '0'),
+			array('styles_admin', 'styles', '1'),
+			array('styles_import2', 'styles&operation=import', '0'),
+			$isplugindeveloper ? array('templates_admin', 'styles&operation=templates', ($operation == 'templates' ? true : false)) : array(),
 			array('cloudaddons_style_link', 'cloudaddons')
-		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
+		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck&formhash='.FORMHASH.'" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
 		showtips('styles_admin_tips');
 		showformheader('styles');
 		showhiddenfields(array('updatecsscache' => 0));
@@ -228,9 +232,9 @@ if($operation == 'admin') {
 		echo $stylelist;
 		showtablefooter();
 		showtableheader();
-		echo '<tr><td>'.$lang['add_new'].'</td><td><input type="text" class="txt" name="newname" size="18">&nbsp;<a href="'.ADMINSCRIPT.'?action=cloudaddons">'.cplang('cloudaddons_style_link').'</a>';
-		echo '</td><td colspan="5">&nbsp;</td></tr>';
-		showsubmit('stylesubmit', 'submit', 'del', '<input onclick="this.form.updatecsscache.value=1" type="submit" class="btn" name="stylesubmit" value="'.cplang('styles_csscache_update').'">');
+		echo $isplugindeveloper ? '<tr><td>'.$lang['add_new'].'</td><td><input type="text" class="txt" name="newname" size="18">' : '';
+		echo $isplugindeveloper ? '</td><td colspan="5">&nbsp;</td></tr>' : '';
+		showsubmit('stylesubmit', 'submit', 'del', '<input onclick="this.form.updatecsscache.value=1" type="submit" class="btn" name="stylesubmit" value="'.cplang('styles_csscache_update').'"> &nbsp;<a href="'.ADMINSCRIPT.'?action=cloudaddons">'.cplang('cloudaddons_style_link').'</a>');
 		showtablefooter();
 		showformfooter();
 
@@ -281,6 +285,9 @@ if($operation == 'admin') {
 			}
 			if(is_numeric($_GET['defaultnew3']) && $defaultid3 != $_GET['defaultnew3'] && isset($sarray[$_GET['defaultnew3']])) {
 				C::t('common_setting')->update('styleid3', $_GET['defaultnew3']);
+			}
+			if(is_numeric($_GET['defaultnew4']) && $defaultid4 != $_GET['defaultnew4'] && isset($sarray[$_GET['defaultnew4']])) {
+				C::t('common_setting')->update('styleid4', $_GET['defaultnew4']);
 			}
 
 			if(isset($_GET['namenew'])) {
@@ -338,6 +345,84 @@ if($operation == 'admin') {
 		}
 
 	}
+} elseif($operation == 'templates') {
+
+	if(!submitcheck('tplsubmit')) {
+
+		$templates = '';
+		foreach(C::t('common_template')->fetch_all_data() as $tpl) {
+			$basedir = basename($tpl['directory']);
+			$templates .= showtablerow('', array('class="td25"', '', 'class="td29"'), array(
+				"<input class=\"checkbox\" type=\"checkbox\" name=\"delete[]\" ".($tpl['templateid'] == 1 ? 'disabled ' : '')."value=\"$tpl[templateid]\">",
+				"<input type=\"text\" class=\"txt\" size=\"8\" name=\"namenew[$tpl[templateid]]\" value=\"$tpl[name]\">".
+				($basedir != 'default' ? '<a href="'.ADMINSCRIPT.'?action=cloudaddons&id='.urlencode($basedir).'.template" target="_blank" title="'.$lang['cloudaddons_linkto'].'">'.$lang['view'].'</a>' : ''),
+				"<input type=\"text\" class=\"txt\" size=\"20\" name=\"directorynew[$tpl[templateid]]\" value=\"$tpl[directory]\">",
+				!empty($tpl['copyright']) ?
+					$tpl['copyright'] :
+					"<input type=\"text\" class=\"txt\" size=\"8\" name=\"copyrightnew[$tpl[templateid]]\" value=>"
+			), TRUE);
+		}
+
+		shownav('style', 'templates_admin');
+		showsubmenu('styles_admin', array(
+			array('styles_admin', 'styles', '0'),
+			array('styles_import2', 'styles&operation=import', '0'),
+			$isplugindeveloper ? array('templates_admin', 'styles&operation=templates', ($operation == 'templates' ? true : false)) : array(),
+			array('cloudaddons_style_link', 'cloudaddons')
+		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck&formhash='.FORMHASH.'" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
+		showformheader('styles&operation=templates');
+		showtableheader();
+		showsubtitle(array('', 'templates_admin_name', 'dir', 'copyright'));
+		echo $templates;
+		echo '<tr><td>'.$lang['add_new'].'</td><td><input type="text" class="txt" size="8" name="newname"></td><td class="td29"><input type="text" class="txt" size="20" name="newdirectory"></td><td><input type="text" class="txt" size="25" name="newcopyright"></td><td>&nbsp;</td></tr>';
+		showsubmit('tplsubmit', 'submit', 'del');
+		showtablefooter();
+		showformfooter();
+
+	} else {
+
+		if($_GET['newname']) {
+			if(!$_GET['newdirectory']) {
+				cpmsg('tpl_new_directory_invalid', '', 'error');
+			} elseif(!istpldir($_GET['newdirectory'])) {
+				$directory = $_GET['newdirectory'];
+				cpmsg('tpl_directory_invalid', '', 'error', array('directory' => $directory));
+			}
+			C::t('common_template')->insert(array('name' => $_GET['newname'], 'directory' => $_GET['newdirectory'], 'copyright' => $_GET['newcopyright']));
+		}
+
+		foreach($_GET['directorynew'] as $id => $directory) {
+			if(!$_GET['delete'] || ($_GET['delete'] && !in_array($id, $_GET['delete']))) {
+				if(!istpldir($directory)) {
+					cpmsg('tpl_directory_invalid', '', 'error', array('directory' => $directory));
+				} elseif($id == 1 && $directory != './template/default') {
+					cpmsg('tpl_default_directory_invalid', '', 'error');
+				}
+				C::t('common_template')->update($id, array('name' => $_GET['namenew'][$id], 'directory' => $_GET['directorynew'][$id]));
+				if(!empty($_GET['copyrightnew'][$id])) {
+					$template = C::t('common_template')->fetch($id);
+					if(!$template['copyright']) {
+						C::t('common_template')->update($id, array('copyright' => $_GET['copyrightnew'][$id]));
+					}
+				}
+			}
+		}
+
+		if(is_array($_GET['delete'])) {
+			if(in_array('1', $_GET['delete'])) {
+				cpmsg('tpl_delete_invalid', '', 'error');
+			}
+			if($_GET['delete']) {
+				C::t('common_template')->delete($_GET['delete']);
+				C::t('common_style')->update($_GET['delete'], array('templateid' => 1));
+			}
+		}
+
+
+		updatecache('styles');
+		cpmsg('tpl_update_succeed', 'action=styles&operation=templates', 'succeed');
+
+	}
 
 } elseif($operation == 'import') {
 
@@ -345,10 +430,11 @@ if($operation == 'admin') {
 
 		shownav('style', 'styles_admin');
 		showsubmenu('styles_admin', array(
-			array('admin', 'styles', '0'),
-			array('import', 'styles&operation=import', '1'),
+			array('styles_admin', 'styles', '0'),
+			array('styles_import2', 'styles&operation=import', '1'),
+			$isplugindeveloper ? array('templates_admin', 'styles&operation=templates', ($operation == 'templates' ? true : false)) : array(),
 			array('cloudaddons_style_link', 'cloudaddons')
-		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
+		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck&formhash='.FORMHASH.'" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
 		showformheader('styles&operation=import', 'enctype');
 		showtableheader('styles_import');
 		showimportdata();
@@ -615,7 +701,7 @@ function imgpre_switch(id) {
 
 	}
 
-} elseif($operation == 'upgradecheck') {
+} elseif($operation == 'upgradecheck' && FORMHASH == $_GET['formhash']) {
 	$templatearray = C::t('common_template')->fetch_all_data();
 	if(!$templatearray) {
 		cpmsg('plugin_not_found', '', 'error');
@@ -653,7 +739,7 @@ function imgpre_switch(id) {
 			array('admin', 'styles', '0'),
 			array('import', 'styles&operation=import', '0'),
 			array('cloudaddons_style_link', 'cloudaddons')
-		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
+		), '<a href="'.ADMINSCRIPT.'?action=styles&operation=upgradecheck&formhash='.FORMHASH.'" class="bold" style="float:right;padding-right:40px;">'.$lang['plugins_validator'].'</a>');
 		showtableheader();
 		if($newarray) {
 			showtitle('styles_validator_newversion');

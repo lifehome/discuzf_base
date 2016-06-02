@@ -69,6 +69,7 @@
 											<option value="uid">{lang uid}</option>
 											<!--{/if}-->
 											<option value="email">{lang email}</option>
+											<option value="sms">{lang sms}</option>
 										</select>
 									</span>
 								<!--{/if}-->
@@ -168,7 +169,7 @@
 	<div id="layer_lostpw_$loginhash" style="display: none;">
 		<h3 class="flb">
 			<em id="returnmessage3_$loginhash">{lang getpassword}</em>
-			<span><!--{if !empty($_GET['infloat']) && !isset($_GET['frommessage'])}--><a href="javascript:;" class="flbc" onclick="hideWindow('login')" title="{lang close}">{lang close}</a><!--{/if}--></span>
+			<span><!--{if !empty($_GET['infloat']) && !isset($_GET['frommessage'])}--><a href="javascript:;" class="flbc" onclick="hideWindow('$_GET[handlekey]')" title="{lang close}">{lang close}</a><!--{/if}--></span>
 		</h3>
 		<form method="post" autocomplete="off" id="lostpwform_$loginhash" class="cl" onsubmit="ajaxpost('lostpwform_$loginhash', 'returnmessage3_$loginhash', 'returnmessage3_$loginhash', 'onerror');return false;" action="member.php?mod=lostpasswd&lostpwsubmit=yes&infloat=yes">
 			<div class="c cl">
@@ -179,6 +180,16 @@
 						<tr>
 							<th><span class="rq">*</span><label for="lostpw_email">{lang email}:</label></th>
 							<td><input type="text" name="email" id="lostpw_email" size="30" value=""  tabindex="1" class="px p_fre" /></td>
+							<td>{lang getpassword_email}</td>
+						</tr>
+					</table>
+				</div>
+				<div class="rfm">
+					<table>
+						<tr>
+							<th><span class="rq">*</span><label for="lostpw_sms">{lang sms}:</label></th>
+							<td><input type="text" name="sms" id="lostpw_sms" size="30" value=""  tabindex="1" class="px p_fre" /></td>
+							<td>{lang getpassword_sms}</td>
 						</tr>
 					</table>
 				</div>
@@ -187,6 +198,7 @@
 						<tr>
 							<th><label for="lostpw_username">{lang username}:</label></th>
 							<td><input type="text" name="username" id="lostpw_username" size="30" value=""  tabindex="1" class="px p_fre" /></td>
+							<td>{lang getpassword_username}</td>
 						</tr>
 					</table>
 				</div>
@@ -196,6 +208,7 @@
 						<tr>
 							<th></th>
 							<td><button class="pn pnc" type="submit" name="lostpwsubmit" value="true" tabindex="100"><span>{lang submit}</span></button></td>
+							<td>{lang getpassword_notice}</td>
 						</tr>
 					</table>
 				</div>
@@ -208,7 +221,7 @@
 	<h3 class="flb" id="layer_header_$loginhash">
 		<!--{if !empty($_GET['infloat']) && !isset($_GET['frommessage'])}-->
 		<em>{lang login_member}</em>
-		<span><a href="javascript:;" class="flbc" onclick="hideWindow('login')" title="{lang close}">{lang close}</a></span>
+		<span><a href="javascript:;" class="flbc" onclick="hideWindow('$_GET[handlekey]')" title="{lang close}">{lang close}</a></span>
 		<!--{/if}-->
 	</h3>
 	<div class="c"><div class="alert_right">

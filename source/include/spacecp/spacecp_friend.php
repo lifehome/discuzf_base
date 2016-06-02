@@ -11,6 +11,8 @@ if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
+global $_G;
+
 require_once libfile('function/friend');
 
 $op = empty($_GET['op'])?'':$_GET['op'];
@@ -107,6 +109,18 @@ if($op == 'add') {
 				'url' => getsiteurl().'home.php?mod=spacecp&ac=friend&amp;op=request'
 			);
 			sendmail_touser($uid, lang('spacecp', 'friend_subject', $values), '', 'friend_add');
+
+			require_once libfile('function/sms');
+			$smsvar = array(
+			    'username' => $tospace['username'],
+			    'bbname' => $_G['setting']['bbname'],
+			    'sitename' => $_G['setting']['sitename'],
+			    'siteurl' => $_G['setting']['siteurl'],
+			    'smstype' => lang('spacecp', 'friend_add'),
+			);
+			$smsconfig = dunserialize($_G['setting']['sms']);
+			$smstemp = $smsconfig['template']['notice'];
+			sendsms_touser($uid, $smsvar, $smstemp, 'friend_add');
 			showmessage('request_has_been_sent', dreferer(), array(), array('showdialog'=>1, 'showmsg' => true, 'closetime' => true));
 
 		} else {

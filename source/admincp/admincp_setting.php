@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: admincp_setting.php 35933 2016-05-13 05:56:41Z nemohou $
+ *      $Id: admincp_setting.php 35033 2014-10-23 10:16:00Z laoguozhang $
  */
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 	exit('Access Denied');
@@ -51,7 +51,7 @@ if(!submitcheck('settingsubmit')) {
 		shownav('safe', 'setting_seccheck');
 	} elseif($operation == 'accountguard') {
 		shownav('safe', 'setting_accountguard');
-	} elseif(in_array($operation, array('mail', 'uc'))) {
+	} elseif(in_array($operation, array('mail', 'sms', 'uc'))) {
 		shownav('founder', 'setting_'.$operation);
 	} else {
 		shownav('global', 'setting_'.$operation);
@@ -81,6 +81,7 @@ if(!submitcheck('settingsubmit')) {
 			array('nav_ec_config', 'setting&operation=ec', 1),
 			array('nav_ec_tenpay', 'ec&operation=tenpay', 0),
 			array('nav_ec_alipay', 'ec&operation=alipay', 0),
+			array('nav_ec_wxpay', 'ec&operation=wxpay', 0),
 			array('nav_ec_credit', 'ec&operation=credit', 0),
 			array('nav_ec_orders', 'ec&operation=orders', 0),
 			array('nav_ec_tradelog', 'tradelog&mod=forum', 0),
@@ -110,6 +111,12 @@ if(!submitcheck('settingsubmit')) {
 		showsubmenuanchors('setting_mail', array(
 			array('setting_mail_setting', 'mailsetting', $_GET['anchor'] == 'setting'),
 			array('setting_mail_check', 'mailcheck', $_GET['anchor'] == 'check')
+		));
+	} elseif($operation == 'sms') {
+		$_GET['anchor'] = in_array($_GET['anchor'], array('setting', 'check')) ? $_GET['anchor'] : 'setting';
+		showsubmenuanchors('setting_sms', array(
+			array('setting_sms_setting', 'smssetting', $_GET['anchor'] == 'setting'),
+			array('setting_sms_check', 'smscheck', $_GET['anchor'] == 'check')
 		));
 	} elseif($operation == 'sec') {
 		$_GET['anchor'] = in_array($_GET['anchor'], array('base', 'reginput', 'postperiodtime')) ? $_GET['anchor'] : 'base';
@@ -202,8 +209,11 @@ if(!submitcheck('settingsubmit')) {
 		showsetting('setting_basic_sitename', 'settingnew[sitename]', $setting['sitename'], 'text');
 		showsetting('setting_basic_siteurl', 'settingnew[siteurl]', $setting['siteurl'], 'text');
 		showsetting('setting_basic_adminemail', 'settingnew[adminemail]', $setting['adminemail'], 'text');
+		showsetting('setting_basic_adminsms', 'settingnew[adminsms]', $setting['adminsms'], 'text');
 		showsetting('setting_basic_site_qq', 'settingnew[site_qq]', $setting['site_qq'], 'text',$disabled = '', $hidden = 0, $comment = '', $extra = 'id="settingnew[site_qq]"');
 		showsetting('setting_basic_icp', 'settingnew[icp]', $setting['icp'], 'text');
+		showsetting('setting_basic_police', 'settingnew[police]', $setting['police'], 'text');
+		showsetting('setting_basic_policeurl', 'settingnew[policeurl]', $setting['policeurl'], 'text');
 		showsetting('setting_basic_boardlicensed', 'settingnew[boardlicensed]', $setting['boardlicensed'], 'radio');
 		showsetting('setting_basic_stat', 'settingnew[statcode]', $setting['statcode'], 'textarea');
 		showtablefooter();
@@ -235,6 +245,7 @@ if(!submitcheck('settingsubmit')) {
 		showsetting('setting_home_base_feedhotnum', 'settingnew[feedhotnum]', $setting['feedhotnum'], 'text');
 		showsetting('setting_home_base_maxpage', 'settingnew[maxpage]', $setting['maxpage'], 'text');
 		showsetting('setting_home_base_sendmailday', 'settingnew[sendmailday]', $setting['sendmailday'], 'text');
+		showsetting('setting_home_base_sendsmsday', 'settingnew[sendsmsday]', $setting['sendsmsday'], 'text');
 		showsetting('setting_home_base_recycle_bin', 'settingnew[blogrecyclebin]', $setting['blogrecyclebin'], 'radio');
 
 		showtagfooter('tbody');
@@ -438,7 +449,12 @@ if(!submitcheck('settingsubmit')) {
 
 		showsetting('setting_access_register_regclosemessage', 'settingnew[regclosemessage]', $setting['regclosemessage'], 'textarea');
 		showsetting('setting_access_register_name', 'settingnew[regname]', $setting['regname'], 'text');
-		showsetting('setting_access_register_send_register_url', 'settingnew[sendregisterurl]', $setting['sendregisterurl'], 'radio');
+		showsetting('setting_access_register_send_register_verify', array('settingnew[sendregisterverify]', array(
+		    array(0, $lang['none'], array('regverifyext' => 'none')),
+		    array(1, $lang['setting_access_register_send_register_verify_email']),
+		    array(2, $lang['setting_access_register_send_register_verify_sms']),
+		    array(3, $lang['setting_access_register_send_register_verify_choose']),
+		)), $setting['sendregisterverify'], 'mradio');
 		showsetting('setting_access_register_link_name', 'settingnew[reglinkname]', $setting['reglinkname'], 'text');
 		showsetting('setting_access_register_censoruser', 'settingnew[censoruser]', $setting['censoruser'], 'textarea');
 		showsetting('setting_access_register_pwlength', 'settingnew[pwlength]', $setting['pwlength'], 'text');
@@ -452,7 +468,8 @@ if(!submitcheck('settingsubmit')) {
 		showsetting('setting_access_register_verify', array('settingnew[regverify]', array(
 			array(0, $lang['none'], array('regverifyext' => 'none')),
 			array(1, $lang['setting_access_register_verify_email'], array('regverifyext' => '')),
-			array(2, $lang['setting_access_register_verify_manual'], array('regverifyext' => ''))
+			array(2, $lang['setting_access_register_verify_manual'], array('regverifyext' => '')),
+			array(3, $lang['setting_access_register_verify_sms'], array('regverifyext' => '')),
 		)), $setting['regverify'], 'mradio');
 		showtagheader('tbody', 'regverifyext', $setting['regverify'], 'sub');
 		showsetting('setting_access_register_verify_areawhite', 'settingnew[areaverifywhite]', $setting['areaverifywhite'], 'textarea');
@@ -470,21 +487,11 @@ if(!submitcheck('settingsubmit')) {
 		showsetting('setting_access_register_floodctrl', 'settingnew[regfloodctrl]', $setting['regfloodctrl'], 'text');
 		showsetting('setting_access_register_ipctrl_time', 'settingnew[ipregctrltime]', $setting['ipregctrltime'], 'text');
 		showsetting('setting_access_register_ipctrl', 'settingnew[ipregctrl]', $setting['ipregctrl'], 'textarea');
-		$welcomemsg = array();
-		if($setting['welcomemsg'] == 1) {
-			$welcomemsg[] = '1';
-		} elseif($setting['welcomemsg'] == 2) {
-			$welcomemsg[] = '2';
-		} elseif($setting['welcomemsg'] == 3) {
-			$welcomemsg[] = '1';
-			$welcomemsg[] = '2';
-		} else {
-			$welcomemsg[] = '0';
-		}
 		showsetting('setting_access_register_welcomemsg', array('settingnew[welcomemsg]', array(
 			array(1, $lang['setting_access_register_welcomemsg_pm']),
-			array(2, $lang['setting_access_register_welcomemsg_email'])
-		)), $welcomemsg, 'mcheckbox');
+			array(2, $lang['setting_access_register_welcomemsg_email']),
+			array(3, $lang['setting_access_register_welcomemsg_sms'])
+		)), dunserialize($setting['welcomemsg']), 'mcheckbox');
 		showsetting('setting_access_register_welcomemsgtitle', 'settingnew[welcomemsgtitle]', $setting['welcomemsgtitle'], 'text');
 		showsetting('setting_access_register_welcomemsgtxt', 'settingnew[welcomemsgtxt]', $setting['welcomemsgtxt'], 'textarea');
 		showsetting('setting_access_register_bbrules', 'settingnew[bbrules]', $setting['bbrules'], 'radio', '', 1);
@@ -1611,13 +1618,73 @@ EOF;
 		showformfooter();
 		exit;
 
+	} elseif($operation == 'sms' && $isfounder) {
+
+		$setting['sms'] = dunserialize($setting['sms']);
+		$passwordmask = $setting['sms']['auth_passwd'] ? $setting['sms']['auth_passwd']{0}.'********'.substr($setting['sms']['auth_passwd'], -2) : '';
+
+		showtableheader('', '', 'id="smssetting"'.($_GET['anchor'] != 'setting' ? ' style="display: none"' : ''));
+		showsetting('setting_sms_smscode_type', array('settingnew[smscodetype]',array(
+			array(1, $lang['setting_sms_smscode_type_letter']),
+			array(2, $lang['setting_sms_smscode_type_number']),
+			array(3, $lang['setting_sms_smscode_type_all']))), $setting['smscodetype'], 'mradio');
+		showsetting('setting_sms_smscode_length', 'settingnew[smscodelength]', $setting['smscodelength'] ? $setting['smscodelength'] : 6, 'number');
+		$setting['sms']['type'] = $setting['sms']['type'] ? $setting['sms']['type'] : 1;
+		showsetting('setting_sms_setting_type', array('settingnew[sms][type]', array(
+			array(1, $lang['setting_sms_setting_type_1'], array('hidden1' => 'block', 'hidden2' => 'none')),
+		)), $setting['sms']['type'], 'mradio');
+        $display = $setting['sms']['type'] == 1 ? 'block' : 'none';
+		echo <<<EOF
+		<tr><td colspan="2">
+            <div id="hidden1" style="display:{$display};">{$lang['setting_sms_setting_type_1_comment']}</div>
+		</td></tr>
+EOF;
+		showsetting('setting_sms_setting_smsauth_username', 'settingnew[sms][auth_username]', $setting['sms']['auth_username'], 'text');
+		showsetting('setting_sms_setting_smsauth_passwd', 'settingnew[sms][auth_passwd]', $passwordmask, 'text');
+		showsetting('setting_sms_setting_silent', 'settingnew[sms][silent]', $setting['sms']['silent'], 'radio');
+		echo <<<EOF
+		<tr><td colspan="2" class="td27">
+            <div>{$lang['setting_sms_setting_template']}:</div>
+		</td></tr>
+        <tr class="noborder"><td colspan="2" class="tips2">{$lang['setting_sms_setting_template_comment']}</td></tr>
+EOF;
+        $temps = array('get_passwd','sms_verify','add_member','notice','moderate_member','adv_expiration','send_invite','invite_payment');//,'birthday'
+        $check_temps = array();
+		foreach ($temps as $v){
+		    showsetting('setting_sms_setting_template_'.$v, 'settingnew[sms][template]['.$v.']', $setting['sms']['template'][$v], 'textarea');
+		    list($sms_sign,$sms_text,$sms_id) = explode("\n", trim(str_ireplace("\r\n", "\n", $setting['sms']['template'][$v])));
+		    $check_temps[] = array($sms_id,$lang['setting_sms_setting_template_'.$v],array('sms_check_template'=>'block\';sms_template_selected(\''.$sms_sign.'\',\''.$sms_text.'\',\''.$sms_id.'\');\''));
+		}
+		showsubmit('settingsubmit');
+		showtablefooter();
+
+		showtableheader('', '', 'id="smscheck"'.($_GET['anchor'] != 'check' ? ' style="display: none"' : ''));
+		showsetting('setting_sms_check_template', array('test_smsid', $check_temps), '', 'mradio');
+		echo <<<EOF
+		<script type="text/JavaScript">
+            function sms_template_selected(sms_sign, sms_text, sms_id){
+                $('sms_check_template').innerHTML = '<br />模板內容：<br />'+sms_sign+'<br />'+sms_text+'<br />'+sms_id;
+                $('sms_template_sign').value = sms_sign;
+		        $('test_msg').value = sms_text;
+            }
+		</script>
+EOF;
+		showsetting('setting_sms_check_template_sign', 'test_sign', '', 'text', '', 0, '', 'id="sms_template_sign"');
+		showsetting('setting_sms_check_template_msg', 'test_msg', '', 'textarea');
+		showsetting('setting_sms_check_test_to', 'test_to', '', 'textarea');
+		showsubmit('', '', '<input type="submit" class="btn" name="smscheck" value="'.cplang('setting_sms_check_submit').'" onclick="this.form.operation.value=\'smscheck\';this.form.action=\''.ADMINSCRIPT.'?action=checktools&operation=smscheck&frame=no\';this.form.target=\'smscheckiframe\';">', '<iframe name="smscheckiframe" style="display: none"></iframe>');
+		showtablefooter();
+
+		showformfooter();
+		exit;
+
 	} elseif($operation == 'accountguard') {
 
 		loadcache('usergroups');
 		$setting['accountguard'] = dunserialize($setting['accountguard']);
 		$usergroups = C::t('common_usergroup_field')->fetch_all(array_keys($_G['cache']['usergroups']));
 		showtableheader('', 'nobottom');
-		$forcelogin = '<tr class="header"><td></td><td>'.cplang('usergroups_edit_basic_forcelogin_none').'</td>'.($_G['setting']['connect']['allow'] ? '<td>'.cplang('usergroups_edit_basic_forcelogin_qq').'</td>' : '').'<td>'.cplang('usergroups_edit_basic_forcelogin_mail').'</td></tr>';
+		$forcelogin = '<tr class="header"><td></td><td>'.cplang('usergroups_edit_basic_forcelogin_none').'</td>'.($_G['setting']['connect']['allow'] ? '<td>'.cplang('usergroups_edit_basic_forcelogin_qq').'</td>' : '').'<td>'.cplang('usergroups_edit_basic_forcelogin_mail').'</td><td>'.cplang('usergroups_edit_basic_forcelogin_sms').'</td></tr>';
 		ksort($_G['cache']['usergroups']);
 		foreach($_G['cache']['usergroups'] as $gid => $usergroup) {
 			if(in_array($gid, array(7, 8))) {
@@ -1627,9 +1694,10 @@ EOF;
 				'<td><label><input class="radio" type="radio" name="aggid['.$gid.']" '.(!$usergroups[$gid]['forcelogin'] ? 'checked ' : '').'value="0">'.'</label></td>'.
 				($_G['setting']['connect']['allow'] ? '<td><label><input class="radio" type="radio" name="aggid['.$gid.']" '.($usergroups[$gid]['forcelogin'] == 1 ? 'checked ' : '').'value="1">'.'</label></td>' : '').
 				'<td><label><input class="radio" type="radio" name="aggid['.$gid.']" '.($usergroups[$gid]['forcelogin'] == 2 ? 'checked ' : '').'value="2">'.'</label></td>'.
+				'<td><label><input class="radio" type="radio" name="aggid['.$gid.']" '.($usergroups[$gid]['forcelogin'] == 3 ? 'checked ' : '').'value="3">'.'</label></td>'.
 				'</tr>';
 		}
-		$forcelogin .= '<tr><td colspan="3" class="lineheight">'.cplang('setting_sec_accountguard_forcelogin_comment').'</td></table>';
+		$forcelogin .= '<tr><td colspan="4" class="lineheight">'.cplang('setting_sec_accountguard_forcelogin_comment').'</td></table>';
 		if($_G['setting']['connect']['allow']) {
 			showsetting('setting_sec_accountguard_postqqonly', 'settingnew[accountguard][postqqonly]', $setting['accountguard']['postqqonly'], 'radio');
 		}
@@ -1754,7 +1822,7 @@ EOF;
 		$setting['secqaa'] = dunserialize($setting['secqaa']);
 		$start_limit = ($page - 1) * 10;
 		$secqaanums = C::t('common_secquestion')->count();
-		$multipage = multi($secqaanums, 10, $page, ADMINSCRIPT.'?action=setting&operation=sec&anchor=secqaa');
+		$multipage = multi($secqaanums, 10, $page, ADMINSCRIPT.'?action=setting&operation=seccheck&anchor=secqaa');
 
 
 		echo <<<EOT
@@ -1806,6 +1874,7 @@ EOT;
 		showtableheader('', '', 'id="base"'.($_GET['anchor'] != 'base' ? ' style="display: none"' : ''));
 		showsetting('setting_sec_floodctrl', 'settingnew[floodctrl]', $setting['floodctrl'], 'text');
 		showsetting('setting_sec_base_need_email', 'settingnew[need_email]', $setting['need_email'], 'radio');
+		showsetting('setting_sec_base_need_sms', 'settingnew[need_sms]', $setting['need_sms'], 'radio');
 		showsetting('setting_sec_base_need_avatar', 'settingnew[need_avatar]', $setting['need_avatar'], 'radio');
 		showsetting('setting_sec_base_need_friendnum', 'settingnew[need_friendnum]', $setting['need_friendnum'], 'text');
 		showtablefooter();
@@ -1816,6 +1885,8 @@ EOT;
 		showsetting('setting_sec_reginput_password', 'settingnew[reginput][password]', $setting['reginput']['password'], 'text');
 		showsetting('setting_sec_reginput_password2', 'settingnew[reginput][password2]', $setting['reginput']['password2'], 'text');
 		showsetting('setting_sec_reginput_email', 'settingnew[reginput][email]', $setting['reginput']['email'], 'text');
+		showsetting('setting_sec_reginput_sms', 'settingnew[reginput][sms]', $setting['reginput']['sms'], 'text');
+		showsetting('setting_sec_reginput_smscode', 'settingnew[reginput][smscode]', $setting['reginput']['smscode'], 'text');
 		showtablefooter();
 		showtagfooter('div');
 
@@ -2386,6 +2457,7 @@ EOT;
 				array(0, $lang['no'], array('mobileext' => 'none'))
 			), TRUE), $setting['mobile']['allowmobile'] ? $setting['mobile']['allowmobile'] : 0, 'mradio');
 		showtagheader('tbody', 'mobileext', $setting['mobile']['allowmobile'], 'sub');
+        showsetting('setting_mobile_allowmnew', 'settingnew[mobile][allowmnew]', $setting['mobile']['allowmnew'], 'radio');
 		showsetting('setting_mobile_mobileforward', 'settingnew[mobile][mobileforward]', $setting['mobile']['mobileforward'], 'radio');
 		showsetting('setting_mobile_register', 'settingnew[mobile][mobileregister]', $setting['mobile']['mobileregister'], 'radio');
 		showsetting('setting_mobile_hotthread', 'settingnew[mobile][mobilehotthread]', $setting['mobile']['mobilehotthread'], 'radio');
@@ -2496,7 +2568,7 @@ EOT;
 		exit;
 
 	} else {
-		if($operation == 'mail' || $operation == 'uc') {
+		if($operation == 'mail' || $operation == 'sms' || $operation == 'uc') {
 			cpmsg('founder_action');
 		} else {
 			cpmsg('undefined_action');
@@ -2626,16 +2698,7 @@ EOT;
 		}
 		$settingnew['regconnect'] = $settingnew['regconnect'] ? 1 : 0;
 
-		$settingnew['welcomemsg'] = (array)$settingnew['welcomemsg'];
-		if(in_array('1', $settingnew['welcomemsg']) && in_array('2', $settingnew['welcomemsg'])) {
-			$settingnew['welcomemsg'] = 3;
-		} elseif(in_array('1', $settingnew['welcomemsg'])) {
-			$settingnew['welcomemsg'] = 1;
-		} elseif(in_array('2', $settingnew['welcomemsg'])) {
-			$settingnew['welcomemsg'] = 2;
-		} else {
-			$settingnew['welcomemsg'] = 0;
-		}
+		$settingnew['welcomemsg'] = $settingnew['welcomemsg'] ? $settingnew['welcomemsg'] : '';
 
 		if(empty($settingnew['strongpw'])) {
 			$settingnew['strongpw'] = array();
@@ -2740,7 +2803,6 @@ EOT;
 	if(!empty($settingnew['thumbstatus']) && !function_exists('imagejpeg')) {
 		$settingnew['thumbstatus'] = 0;
 	}
-
 
 	if(!empty($settingnew['memory'])) {
 		$memory = array();
@@ -2915,6 +2977,12 @@ EOT;
 		if(!preg_match('/^[A-z]\w+?$/', $settingnew['reginput']['email'])) {
 			$settingnew['reginput']['email'] =  'email';
 		}
+		if(!preg_match('/^[A-z]\w+?$/', $settingnew['reginput']['sms'])) {
+			$settingnew['reginput']['sms'] =  'sms';
+		}
+		if(!preg_match('/^[A-z]\w+?$/', $settingnew['reginput']['smscode'])) {
+			$settingnew['reginput']['smscode'] =  'smscode';
+		}
 		foreach($settingnew['reginput'] as $key => $val) {
 			foreach($settingnew['reginput'] as $k => $v) {
 				if($key == $k) continue;
@@ -3088,6 +3156,14 @@ EOT;
 		}
 	}
 
+	if($isfounder && isset($settingnew['sms'])) {
+		$setting['sms'] = dunserialize($setting['sms']);
+		$oldpasswd = $setting['sms']['auth_passwd'] ? $setting['sms']['auth_passwd']{0}.'********'.substr($setting['sms']['auth_passwd'], -2) : '';
+		if($oldpasswd == $settingnew['sms']['auth_passwd']){
+		    $settingnew['sms']['auth_passwd'] = $setting['sms']['auth_passwd'];
+		}
+	}
+
 	if(isset($settingnew['jsrefdomains'])) {
 		$settingnew['jsrefdomains'] = trim(preg_replace("/(\s*(\r\n|\n\r|\n|\r)\s*)/", "\r\n", $settingnew['jsrefdomains']));
 	}
@@ -3254,6 +3330,7 @@ EOT;
 
 	if($operation == 'mobile') {
 		$settingnew['mobile_arr']['allowmobile'] = intval($settingnew['mobile']['allowmobile']);
+        $settingnew['mobile_arr']['allowmnew'] = intval($settingnew['mobile']['allowmnew']);
 		$settingnew['mobile_arr']['mobileforward'] = intval($settingnew['mobile']['mobileforward']);
 		$settingnew['mobile_arr']['mobileregister'] = intval($settingnew['mobile']['mobileregister']);
 		$settingnew['mobile_arr']['mobileseccode'] = intval($settingnew['mobile']['mobileseccode']);
@@ -3410,13 +3487,13 @@ EOT;
 				'maxprice', 'rssttl', 'maxonlines', 'floodctrl', 'regctrl', 'regfloodctrl',
 				'searchctrl', 'extcredits1', 'extcredits2', 'extcredits3', 'extcredits4', 'extcredits5', 'extcredits6',
 				'extcredits7', 'extcredits8', 'transfermincredits', 'exchangemincredits', 'maxincperthread', 'maxchargespan',
-				'maxspm', 'maxsearchresults', 'maxsmilies', 'threadmaxpages', 'maxpostsize', 'minpostsize', 'sendmailday',
+				'maxspm', 'maxsearchresults', 'maxsmilies', 'threadmaxpages', 'maxpostsize', 'minpostsize', 'sendmailday', 'sendsmsday',
 				'maxpolloptions', 'karmaratelimit', 'losslessdel', 'smcols', 'allowdomain', 'feedday', 'feedmaxnum', 'feedhotday', 'feedhotmin',
 				'feedtargetblank', 'updatestat', 'namechange', 'namecheck', 'networkpage', 'maxreward', 'groupnum', 'starlevelnum', 'friendgroupnum',
 				'pollforumid', 'tradeforumid', 'rewardforumid', 'activityforumid', 'debateforumid', 'maxpage',
 				'starcredit', 'topcachetime', 'newspacevideophoto', 'newspacerealname', 'newspaceavatar', 'newspacenum', 'shownewuser',
-				'feedhotnum', 'showallfriendnum', 'feedread',
-				'need_friendnum', 'need_avatar', 'uniqueemail', 'need_email', 'allowquickviewprofile', 'preventrefresh',
+				'feedhotnum', 'showallfriendnum', 'feedread','smscodetype',
+				'need_friendnum', 'need_avatar', 'uniqueemail', 'need_email', 'uniqueesms', 'need_sms', 'allowquickviewprofile', 'preventrefresh',
 				'jscachelife', 'maxmodworksmonths', 'maxonlinelist'))) {
 				$val = (float)$val;
 			}
@@ -3577,7 +3654,7 @@ function showdetial(&$forum, $varname, $type = '', $last = '', $toggle = false) 
 }
 
 function getmemorycachekeys() {
-	return array('common_member', 'forum_thread', 'forum_thread_forumdisplay','forum_postcache',
+	return array('common_member', 'forum_forum', 'forum_thread', 'forum_thread_forumdisplay','forum_postcache',
 				'forum_collectionrelated', 'forum_collection', 'home_follow', 'forumindex', 'diyblock', 'diyblockoutput');
 }
 

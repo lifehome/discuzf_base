@@ -49,6 +49,7 @@ $lang = array(
 
 
 	'friend_subject' => '<a href="{url}" target="_blank">{username} 請求加您為好友</a>',
+    'friend_add' => '添加好友請求',
 	'friend_request_note' => '，附言：{note}',
 	'comment_friend' =>'<a href="\\2" target="_blank">\\1 給您留言了</a>',
 	'photo_comment' => '<a href="\\2" target="_blank">\\1 評論了您的照片</a>',
@@ -333,6 +334,10 @@ $lang = array(
 	'email_acitve_message' => '<img src="{imgdir}/mail_inactive.png" alt="未驗證" class="vm" /> <span class="xi1">新郵箱({newemail})等待驗證中...</span><br />
 								系統已經向該郵箱發送了一封驗證激活郵件，請查收郵件，進行驗證激活。<br>
 								如果沒有收到驗證郵件，您可以更換一個郵箱，或者<a href="home.php?mod=spacecp&ac=profile&op=password&resend=1" class="xi2">重新接收驗證郵件</a>',
+	'sms_acitve_message' => '<img src="{imgdir}/sms_inactive.png" alt="未驗證" class="vm" /> <span class="xi1">新手機({newsms})等待驗證中...</span><br />
+								系統已經向該手機發送了一條驗證激活短信，請查收短信，輸入驗證碼進行驗證激活。<br>
+	                            短信驗證碼：<input type="text" name="smscode" id="smscode" class="px" style="width: 60px;" /> <br>
+								如果沒有收到驗證短信，您可以更換一個手機號，或者<a href="home.php?mod=spacecp&ac=profile&op=password&resend=2" class="xi2">重新接收驗證短信</a>',
 	'qq_set_status' => '設置我的QQ在線狀態',
 	'qq_dialog' => '發起QQ聊天',
 

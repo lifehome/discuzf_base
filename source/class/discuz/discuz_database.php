@@ -84,6 +84,7 @@ class discuz_database {
 	}
 
 	public static function fetch($resourceid, $type = MYSQL_ASSOC) {
+		if(self::$db->drivertype == 'mysqli') $type = MYSQLI_ASSOC;
 		return self::$db->fetch_array($resourceid, $type);
 	}
 
@@ -174,7 +175,7 @@ class discuz_database {
 	public static function quote($str, $noarray = false) {
 
 		if (is_string($str))
-			return '\'' . mysql_escape_string($str) . '\'';
+			return '\'' . self::$db->escape_string($str) . '\'';
 
 		if (is_int($str) or is_float($str))
 			return '\'' . $str . '\'';

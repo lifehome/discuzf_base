@@ -144,6 +144,10 @@ function pic_save($FILE, $albumid, $title, $iswatermark = true, $catid = 0) {
 			return lang('message', 'no_privilege_email');
 		}
 
+		if($_G['setting']['need_sms'] && empty($_G['member']['smsstatus'])) {
+			return lang('message', 'no_privilege_sms');
+		}
+
 		if($_G['setting']['need_friendnum']) {
 			space_merge($_G['member'], 'count');
 			if($_G['member']['friends'] < $_G['setting']['need_friendnum']) {
@@ -625,6 +629,28 @@ function emailcheck_send($uid, $email) {
 			runlog('sendmail', "$email sendmail failed.");
 		}
 	}
+}
+
+
+function smscheck_send($uid, $sms) {
+    global $_G;
+
+    if($uid && $sms) {
+        $code = make_smscode($sms);
+        $smsconfig = dunserialize($_G['setting']['sms']);
+        $template = $smsconfig['template']['sms_verify'];
+        $message = array(
+            'bbname'=>$_G['setting']['bbname'],
+            'sitename'=>$_G['setting']['sitename'],
+            'siteurl'=>$_G['setting']['siteurl'],
+            'username'=>$_G['username'],
+            'code'=>$code,
+        );
+        require_once libfile('function/sms');
+        if(!sendsms($sms, $message, $template)) {
+            runlog('sendsms', "$sms sendsms failed.");
+        }
+    }
 }
 
 function picurl_get($picurl, $maxlenth='200') {

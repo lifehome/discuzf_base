@@ -48,7 +48,7 @@
 			<input type="hidden" name="formhash" value="{FORMHASH}" />
 			<input type="hidden" name="referer" value="$dreferer" />
 			<input type="hidden" name="activationauth" value="{if $_GET[action] == 'activation'}$activationauth{/if}" />
-			<!--{if $_G['setting']['sendregisterurl']}-->
+			<!--{if $_G['setting']['sendregisterverify']}-->
 				<input type="hidden" name="hash" value="$_GET[hash]" />
 			<!--{/if}-->
 			<div class="mtw">
@@ -109,7 +109,7 @@
 							<table>
 								<tr>
 									<th><span class="rq">*</span><label for="invitecode">{lang invite_code}:</label></th>
-									<td><input type="text" id="invitecode" name="invitecode" autocomplete="off" size="25" onblur="checkinvite()" tabindex="1" class="px" required /><!--{if $this->setting['inviteconfig']['buyinvitecode'] && $this->setting['inviteconfig']['invitecodeprice'] && ($this->setting[ec_tenpay_bargainor] || $this->setting[ec_tenpay_opentrans_chnid] || $this->setting[ec_account])}--><p><a href="misc.php?mod=buyinvitecode" target="_blank" class="xi2">{lang register_buyinvitecode}</a></p><!--{/if}--></td>
+									<td><input type="text" id="invitecode" name="invitecode" autocomplete="off" size="25" onblur="checkinvite()" tabindex="1" class="px" required /><!--{if $this->setting['inviteconfig']['buyinvitecode'] && $this->setting['inviteconfig']['invitecodeprice'] && ($this->setting[ec_tenpay_bargainor] || $this->setting[ec_wxpay_appid] || $this->setting[ec_tenpay_opentrans_chnid] || $this->setting[ec_account])}--><p><a href="misc.php?mod=buyinvitecode" target="_blank" class="xi2">{lang register_buyinvitecode}</a></p><!--{/if}--></td>
 									<td class="tipcol"><i id="tip_invitecode" class="p_tip"><!--{if $this->setting['inviteconfig']['invitecodeprompt']}-->$this->setting[inviteconfig][invitecodeprompt]<!--{/if}--></i><kbd id="chk_invitecode" class="p_chk"></kbd></td>
 								</tr>
 							</table>
@@ -157,6 +157,32 @@
 									</tr>
 								</table>
 							</div>
+
+							<div class="rfm">
+								<table>
+									<tr>
+										<th><!--{if !$_G['setting']['forgesms']}--><span class="rq">*</span><!--{/if}--><label for="{$this->setting['reginput']['sms']}">{lang sms}:</label></th>
+										<td><input type="text" id="{$this->setting['reginput']['sms']}" name="" autocomplete="off" size="25" tabindex="1" class="px" {if !$_G['setting']['forgesms']}required{/if} /><em id="smsmore">&nbsp;</em></td>
+										<td class="tipcol"><i id="tip_{$this->setting['reginput']['sms']}" class="p_tip">{lang register_sms_tips}</i><kbd id="chk_{$this->setting['reginput']['sms']}" class="p_chk"></kbd></td>
+									</tr>
+								</table>
+							</div>
+							
+							<!--{if $sendsms}-->
+								<div class="rfm">
+									<table>
+										<tr>
+											<th><span class="rq">*</span><label for="{$this->setting['reginput']['smscode']}">{lang smscode}:</label></th>
+											<td>
+												<input type="text" id="{$this->setting['reginput']['smscode']}" name="" autocomplete="off" size="8" tabindex="1" class="px" style="width: 100px;" />
+												<input type="button" id="smscodesend" class="pn" value="{lang smscodesend}" style="width: 115px; margin-top: -5px;" />
+												<em id="smscodemore">&nbsp;</em>
+											</td>
+											<td class="tipcol"><i id="tip_{$this->setting['reginput']['smscode']}" class="p_tip">{lang register_smscode_tips}</i><kbd id="chk_{$this->setting['reginput']['smscode']}" class="p_chk"></kbd></td>
+										</tr>
+									</table>
+								</div>
+							<!--{/if}-->
 						<!--{/if}-->
 
 						<!--{if $_GET[action] == 'activation'}-->

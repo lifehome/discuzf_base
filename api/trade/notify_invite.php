@@ -16,8 +16,11 @@ require '../../source/function/function_forum.php';
 
 $discuz = C::app();
 $discuz->init();
-
-$apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+if(preg_match('/<appid><\!\[CDATA\[wx\w+\]\]><\/appid>/isU', file_get_contents("php://input"))){
+    $apitype = 'wxpay';
+}else{
+    $apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+}
 require_once DISCUZ_ROOT.'./api/trade/api_'.$apitype.'.php';
 $PHP_SELF = $_SERVER['PHP_SELF'];
 $_G['siteurl'] = dhtmlspecialchars('http://'.$_SERVER['HTTP_HOST'].preg_replace("/\/+(api\/trade)?\/*$/i", '', substr($PHP_SELF, 0, strrpos($PHP_SELF, '/'))).'/');
@@ -26,7 +29,7 @@ if($notifydata['validator']) {
 	$orderid = $notifydata['order_no'];
 	$postprice = $notifydata['price'];
 	$order = C::t('forum_order')->fetch($orderid);
-	if($order && floatval($postprice) == floatval($order['price']) && ($apitype == 'tenpay' || $_G['setting']['ec_account'] == $_REQUEST['seller_email'])) {
+	if($order && floatval($postprice) == floatval($order['price']) && ($apitype == 'tenpay' || strtolower($_G['setting']['ec_wxpay_appid']) == strtolower($notifydata['appid']) || $_G['setting']['ec_account'] == $_REQUEST['seller_email'])) {
 
 		if($order['status'] == 1) {
 			C::t('forum_order')->update($orderid, array('status' => '2', 'buyer' => "$notifydata[trade_no]\t$apitype", 'confirmdate' => $_G['timestamp']));
@@ -42,6 +45,7 @@ if($notifydata['validator']) {
 							'dateline' => $dateline,
 							'endtime' => $_G['group']['maxinviteday'] ? ($_G['timestamp']+$_G['group']['maxinviteday']*24*3600) : $_G['timestamp']+86400*10,
 							'email' => $order['email'],
+							'sms' => $order['sms'],
 							'inviteip' => $_G['clientip'],
 							'orderid' => $orderid
 						);
@@ -51,18 +55,37 @@ if($notifydata['validator']) {
 
 			$submitdate = dgmdate($order['submitdate']);
 			$confirmdate = dgmdate(TIMESTAMP);
-			if(!function_exists('sendmail')) {
-				include libfile('function/mail');
+			if($order['email']){
+    			if(!function_exists('sendmail')) {
+    				include_once libfile('function/mail');
+    			}
+    			$add_member_subject = $_G['setting']['bbname'].' - '.lang('forum/misc', 'invite_payment');
+    			$add_member_message = lang('email', 'invite_payment_email_message', array(
+    				'orderid' => $order['orderid'],
+    				'codetext' => implode('<br />', $codetext),
+    				'siteurl' => $_G['siteurl'],
+    				'bbname' => $_G['setting']['bbname'],
+    			));
+    			if(!sendmail($order['email'], $add_member_subject, $add_member_message)) {
+    				runlog('sendmail', "$order[email] sendmail failed.");
+    			}
 			}
-			$add_member_subject = $_G['setting']['bbname'].' - '.lang('forum/misc', 'invite_payment');
-			$add_member_message = lang('email', 'invite_payment_email_message', array(
-				'orderid' => $order['orderid'],
-				'codetext' => implode('<br />', $codetext),
-				'siteurl' => $_G['siteurl'],
-				'bbname' => $_G['setting']['bbname'],
-			));
-			if(!sendmail($order['email'], $add_member_subject, $add_member_message)) {
-				runlog('sendmail', "$order[email] sendmail failed.");
+			if($order['sms']){
+			    if(!function_exists('sendsms')) {
+			        include_once libfile('function/sms');
+			    }
+			    $smsconfig = dunserialize($_G['setting']['sms']);
+			    $smstemp = $smsconfig['template']['invite_payment'];
+			    $smsvar = array(
+			        'bbname'=>$_G['setting']['bbname'],
+			        'sitename'=>$_G['setting']['sitename'],
+			        'siteurl'=>$_G['setting']['siteurl'],
+			        'orderid'=>$order['orderid'],
+			        'codetext'=>implode(',', $codetext),
+			    );
+			    if(!sendsms($order['sms'], $smsvar, $smstemp)) {
+			        runlog('sendsms', "$order[sms] sendsms failed.");
+			    }
 			}
 		}
 

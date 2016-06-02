@@ -6,6 +6,7 @@
  *
  *      $Id: wechat.php 34480 2014-05-07 01:18:15Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

@@ -699,7 +699,30 @@ function block_updateitem($bid, $items=array()) {
 		C::t('common_block_item')->delete_by_itemid_bid($delids, $bid);
 		block_delete_pic($bid, $delids);
 	}
-	$inserts = $itemlist = array();
+	$newshowlist = $inserts = $itemlist = array();
+	foreach($showlist as $key => $value){
+			if($value['itemtype'] > 0){
+					if($value['idtype'] == 'tid'){
+						$thread = C::t('forum_thread')->fetch($value['id']);
+						$fields = dunserialize($value['fields']);
+						$fields['views'] = $thread['views'];
+						$fields['replies'] = $thread['replies'];
+						$fields['lastpost'] = $thread['lastpost'];
+						$fields['heats'] = $thread['heats'];
+						$fields['recommends'] = $thread['recommends'];
+						$value['fields'] = serialize($fields);
+					}elseif($value['idtype'] == 'aid'){
+						$article = C::t('portal_article_count')->fetch($value['id']);
+						$fields = dunserialize($value['fields']);
+						$fields['viewnum'] = $article['viewnum'];
+						$fields['commentnum'] = $article['commentnum'];
+						$value['fields'] = serialize($fields);
+					}
+			}
+			$newshowlist[$key] = $value;
+	}
+	$showlist = $newshowlist;
+	unset($newshowlist);
 	$itemlist = array_merge($showlist, $prelist);
 	C::t('common_block_item')->insert_batch($bid, $itemlist);
 

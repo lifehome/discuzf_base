@@ -40,14 +40,13 @@ if(!$_G['uid'] && !((!$_G['forum']['replyperm'] && $_G['group']['allowreply']) |
 	showmessage('post_forum_newreply_nopermission', NULL);
 }
 
-if(!$_G['uid'] && ($_G['setting']['need_avatar'] || $_G['setting']['need_email'] || $_G['setting']['need_friendnum'])) {
-	showmessage('replyperm_login_nopermission', NULL, array(), array('login' => 1));
-}
 
 if(empty($thread)) {
 	showmessage('thread_nonexistence');
 } elseif($thread['price'] > 0 && $thread['special'] == 0 && !$_G['uid']) {
 	showmessage('group_nopermission', NULL, array('grouptitle' => $_G['group']['grouptitle']), array('login' => 1));
+} elseif(!$thread['isgroup'] && $post_autoclose = checkautoclose($thread)) {
+	showmessage($post_autoclose, '', array('autoclose' => $_G['forum']['autoclose']));
 }
 
 checklowerlimit('reply', 0, 1, $_G['forum']['fid']);

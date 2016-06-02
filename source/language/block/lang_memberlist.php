@@ -26,6 +26,7 @@ $lang = array
 	'memberlist_birthcity' => '出生城市',
 	'memberlist_avatarstatus' => '過濾無頭像用戶',
 	'memberlist_emailstatus' => '通過郵件認證',
+	'memberlist_smsstatus' => '通過短信認證',
 	'memberlist_verifystatus' => '已通過的認證',
 	'memberlist_special_default' => '推薦好友',
 	'memberlist_startrow' => '起始數據行數',

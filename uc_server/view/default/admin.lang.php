@@ -13,5 +13,6 @@ $lang = array(
 	'user_addsubmit' => '添 加',
 	'delete' => '刪除',
 	'email' => 'Email',
+	'sms' => '手機',
 	'user_list' => '用戶列表',
 );

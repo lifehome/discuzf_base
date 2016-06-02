@@ -16,21 +16,22 @@ require '../../source/function/function_forum.php';
 
 $discuz = C::app();
 $discuz->init();
-
-$apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+if(preg_match('/<appid><\!\[CDATA\[wx\w+\]\]><\/appid>/isU', file_get_contents("php://input"))){
+    $apitype = 'wxpay';
+}else{
+    $apitype = empty($_GET['attach']) || !preg_match('/^[a-z0-9]+$/i', $_GET['attach']) ? 'alipay' : $_GET['attach'];
+}
 require_once DISCUZ_ROOT.'./api/trade/api_'.$apitype.'.php';
 $PHP_SELF = $_SERVER['PHP_SELF'];
 $_G['siteurl'] = dhtmlspecialchars('http://'.$_SERVER['HTTP_HOST'].preg_replace("/\/+(api\/trade)?\/*$/i", '', substr($PHP_SELF, 0, strrpos($PHP_SELF, '/'))).'/');
 $notifydata = trade_notifycheck('credit');
-
 if($notifydata['validator']) {
 
 	$orderid = $notifydata['order_no'];
 	$postprice = $notifydata['price'];
 	$order = C::t('forum_order')->fetch($orderid);
 	$order = array_merge($order, C::t('common_member')->fetch_by_username($order['uid']));
-	if($order && floatval($postprice) == floatval($order['price']) && ($apitype == 'tenpay' || strtolower($_G['setting']['ec_account']) == strtolower($_REQUEST['seller_email']))) {
-
+	if($order && floatval($postprice) == floatval($order['price']) && ($apitype == 'tenpay' || strtolower($_G['setting']['ec_wxpay_appid']) == strtolower($notifydata['appid']) || strtolower($_G['setting']['ec_account']) == strtolower($_REQUEST['seller_email']))) {
 		if($order['status'] == 1) {
 			C::t('forum_order')->update($orderid, array('status' => '2', 'buyer' => "$notifydata[trade_no]\t$apitype", 'confirmdate' => $_G['timestamp']));
 			updatemembercount($order['uid'], array($_G['setting']['creditstrans'] => $order['amount']), 1, 'AFD', $order['uid']);

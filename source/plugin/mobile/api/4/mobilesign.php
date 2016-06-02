@@ -6,6 +6,7 @@
  *
  *      $Id: mobilesign.php 34702 2014-07-10 10:08:30Z nemohou $
  */
+
 if (!defined('IN_MOBILE_API')) {
 	exit('Access Denied');
 }

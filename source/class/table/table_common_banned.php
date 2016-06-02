@@ -29,6 +29,10 @@ class table_common_banned extends discuz_table
 		return DB::fetch_all('SELECT * FROM %t ORDER BY dateline', array($this->_table));
 	}
 
+	public function fetch_all_limit($startlimit, $pagesize) {
+		return DB::fetch_all('SELECT * FROM %t ORDER BY dateline limit %d, %d', array($this->_table, $start, $pagesize));
+	}
+
 	public function fetch_all() {
 		return DB::fetch_all('SELECT * FROM %t', array($this->_table));
 	}
